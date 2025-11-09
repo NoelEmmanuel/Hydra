@@ -94,7 +94,23 @@ Knowledge Bases:
 Available Tools:
 {tool_content}
 
-You can use tools by requesting them through MCP (Model Context Protocol) capabilities. When you need to use a tool, indicate it in your response.
+You can use tools by requesting them through MCP (Model Context Protocol) capabilities. When you need to use a tool, you MUST respond with a JSON object in this exact format:
+
+{{
+  "tool_id": <tool_id_number>,
+  "action": "<action_name>",
+  <other_required_parameters>
+}}
+
+For example, to use the Jira tool (tool_id 1) to create an issue:
+{{
+  "tool_id": 1,
+  "action": "create_issue",
+  "project_key": "PROJ",
+  "summary": "Issue title",
+  "issuetype": "Task",
+  "description": "Optional description"
+}}
 
 Your task: {prompt}"""
         
@@ -153,11 +169,10 @@ Please process the tool result and provide your final answer."""
             Dict with tool call info or None if no tool call detected
         """
         # Try to find JSON tool call in response
-        # Pattern: tool call might be in JSON format like:
-        # {"tool_id": 1, "action": "get_file_contents", "owner": "...", "repo": "...", "path": "..."}
-        # or similar formats
+        # Pattern 1: {"tool_id": 1, "action": "...", ...}
+        # Pattern 2: {"tool_call": {"name": "...", "arguments": {...}}}
         
-        # Look for JSON objects in the response
+        # Look for JSON objects with tool_id
         json_pattern = r'\{[^{}]*"tool_id"[^{}]*\}'
         matches = re.findall(json_pattern, response, re.DOTALL)
         
@@ -169,8 +184,92 @@ Please process the tool result and provide your final answer."""
             except:
                 continue
         
-        # Also check for simpler patterns like "use tool 1" or "call tool with..."
-        # For now, we'll rely on JSON format
+        # Look for tool_call format: {"tool_call": {"name": "...", "arguments": {...}}}
+        # Use a more robust approach to find nested JSON
+        # Try to find the complete JSON object by counting braces
+        start_idx = response.find('{"tool_call"')
+        if start_idx != -1:
+            brace_count = 0
+            end_idx = start_idx
+            in_string = False
+            escape_next = False
+            
+            for i in range(start_idx, len(response)):
+                char = response[i]
+                
+                if escape_next:
+                    escape_next = False
+                    continue
+                
+                if char == '\\':
+                    escape_next = True
+                    continue
+                
+                if char == '"' and not escape_next:
+                    in_string = not in_string
+                    continue
+                
+                if not in_string:
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+            
+            if brace_count == 0 and end_idx > start_idx:
+                try:
+                    json_str = response[start_idx:end_idx]
+                    parsed = json.loads(json_str)
+                    if "tool_call" in parsed:
+                        tool_call_data = parsed["tool_call"]
+                        tool_name = tool_call_data.get("name", "")
+                        arguments = tool_call_data.get("arguments", {})
+                        
+                        # Find tool_id by matching tool name
+                        tool_id = None
+                        for tool in self.tools:
+                            if tool.get("name", "").lower() == tool_name.lower():
+                                tool_id = tool.get("id")
+                                break
+                        
+                        if tool_id:
+                            # Merge tool_id with arguments
+                            result = {"tool_id": tool_id}
+                            result.update(arguments)
+                            return result
+                except:
+                    pass
+        
+        # Also try to find nested JSON objects more broadly
+        # Look for any JSON object containing "action" (for GitHub/Jira tools)
+        action_pattern = r'\{[^{}]*"action"[^{}]*\}'
+        matches = re.findall(action_pattern, response, re.DOTALL)
+        
+        for match in matches:
+            try:
+                tool_call = json.loads(match)
+                if "action" in tool_call:
+                    # Try to find tool_id by checking if this looks like a tool call
+                    # If it has action but no tool_id, we need to infer it
+                    # For now, check if we can find tool_id elsewhere or infer from context
+                    if "tool_id" not in tool_call:
+                        # Try to find tool_id in surrounding context
+                        # Look for tool_id in a larger JSON block
+                        larger_pattern = r'\{[^{}]*"tool_id"[^{}]*"action"[^{}]*\}'
+                        larger_matches = re.findall(larger_pattern, response, re.DOTALL)
+                        for larger_match in larger_matches:
+                            try:
+                                larger_parsed = json.loads(larger_match)
+                                if "tool_id" in larger_parsed:
+                                    return larger_parsed
+                            except:
+                                continue
+                    else:
+                        return tool_call
+            except:
+                continue
         
         return None
     

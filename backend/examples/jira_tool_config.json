@@ -1,0 +1,23 @@
+{
+  "mission": "To manage a multi-agent system with Jira integration",
+  "models": [
+    {
+      "id": 1,
+      "name": "Issue Management Model",
+      "knowledge_bases": [],
+      "tools": [1]
+    }
+  ],
+  "knowledge_bases": [],
+  "tools": [
+    {
+      "id": 1,
+      "name": "Jira Tool",
+      "description": "Create issues in Jira",
+      "api_url": "https://your-domain.atlassian.net",
+      "api_key": "your-api-token-here",
+      "email": "your-email@example.com"
+    }
+  ]
+}
+

@@ -5,6 +5,7 @@ import requests
 import json
 from typing import Dict, List, Any, Optional
 from .tools.github_tool import get_file_contents
+from .tools.jira_tool import create_issue
 
 
 def is_github_tool(tool: Dict[str, Any]) -> bool:
@@ -20,6 +21,21 @@ def is_github_tool(tool: Dict[str, Any]) -> bool:
     api_url = tool.get('api_url', '').lower()
     tool_name = tool.get('name', '').lower()
     return 'github.com' in api_url or 'github' in tool_name
+
+
+def is_jira_tool(tool: Dict[str, Any]) -> bool:
+    """
+    Check if a tool is a Jira tool.
+    
+    Args:
+        tool: Tool dict
+    
+    Returns:
+        True if tool is Jira, False otherwise
+    """
+    api_url = tool.get('api_url', '').lower()
+    tool_name = tool.get('name', '').lower()
+    return 'atlassian.net' in api_url or 'jira' in tool_name
 
 
 def format_tool_for_mcp(tool: Dict[str, Any]) -> Dict[str, Any]:
@@ -66,6 +82,48 @@ def format_tool_for_mcp(tool: Dict[str, Any]) -> Dict[str, Any]:
                 "api_key": tool.get("api_key", ""),
                 "tool_id": tool.get("id"),
                 "tool_type": "github"
+            }
+        }
+    
+    # Jira tools have special schema
+    if is_jira_tool(tool):
+        return {
+            "name": tool.get("name", f"tool_{tool.get('id')}"),
+            "description": tool.get("description", ""),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["create_issue"],
+                        "default": "create_issue",
+                        "description": "Jira action to perform"
+                    },
+                    "project_key": {
+                        "type": "string",
+                        "description": "Jira project key (e.g., 'PROJ')"
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "Issue summary/title"
+                    },
+                    "issuetype": {
+                        "type": "string",
+                        "description": "Issue type name (e.g., 'Task', 'Bug', 'Story')"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional issue description"
+                    }
+                },
+                "required": ["action", "project_key", "summary", "issuetype"]
+            },
+            "metadata": {
+                "api_url": tool.get("api_url", ""),
+                "api_key": tool.get("api_key", ""),
+                "email": tool.get("email", ""),
+                "tool_id": tool.get("id"),
+                "tool_type": "jira"
             }
         }
     
@@ -230,6 +288,66 @@ def execute_github_file_contents(
         }
 
 
+def execute_jira_create_issue(
+    tool: Dict[str, Any],
+    project_key: str,
+    summary: str,
+    issuetype: str,
+    description: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Execute Jira create issue API call.
+    
+    Args:
+        tool: Tool dict with 'api_url', 'api_key', and 'email'
+        project_key: Jira project key
+        summary: Issue summary/title
+        issuetype: Issue type name
+        description: Optional issue description
+    
+    Returns:
+        Dict with issue creation result
+    """
+    api_url = tool.get('api_url', '')
+    api_key = tool.get('api_key', '')
+    email = tool.get('email', '')
+    
+    if not api_key:
+        raise ValueError("Jira tool requires api_key")
+    if not email:
+        raise ValueError("Jira tool requires email")
+    
+    try:
+        result = create_issue(
+            jira_url=api_url,
+            email=email,
+            api_token=api_key,
+            project_key=project_key,
+            summary=summary,
+            issuetype=issuetype,
+            description=description
+        )
+        return {
+            "success": True,
+            "result": result
+        }
+    except requests.HTTPError as e:
+        return {
+            "success": False,
+            "error": f"Jira API error: {str(e)}"
+        }
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": f"Jira validation error: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Error creating Jira issue: {str(e)}"
+        }
+
+
 def handle_mcp_tool_call(
     tool_id: int,
     tools: List[Dict[str, Any]],
@@ -271,6 +389,28 @@ def handle_mcp_tool_call(
             return {
                 "success": False,
                 "error": f"Unknown GitHub action: {action}"
+            }
+    
+    # Handle Jira tools
+    if is_jira_tool(tool):
+        action = mcp_call.get('action', 'create_issue')
+        if action == 'create_issue':
+            project_key = mcp_call.get('project_key')
+            summary = mcp_call.get('summary')
+            issuetype = mcp_call.get('issuetype')
+            description = mcp_call.get('description')
+            
+            if not project_key or not summary or not issuetype:
+                return {
+                    "success": False,
+                    "error": "Jira create_issue requires 'project_key', 'summary', and 'issuetype' parameters"
+                }
+            
+            return execute_jira_create_issue(tool, project_key, summary, issuetype, description)
+        else:
+            return {
+                "success": False,
+                "error": f"Unknown Jira action: {action}"
             }
     
     # Handle generic tools
