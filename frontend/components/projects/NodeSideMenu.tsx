@@ -172,24 +172,27 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                   <SelectItem value="yaml">YAML</SelectItem>
                   <SelectItem value="parquet">Parquet</SelectItem>
                   <SelectItem value="excel">Excel</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Schema Textarea */}
-            <div>
-              <label htmlFor="schema" className="block text-sm font-medium text-foreground mb-2">
-                Schema
-              </label>
-              <textarea
-                id="schema"
-                value={selectedNode.data?.schema || ''}
-                onChange={(e) => updateNodeData('schema', e.target.value)}
-                rows={4}
-                className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs resize-none"
-                placeholder="Enter schema definition"
-              />
-            </div>
+            {/* Schema Textarea - Only show if type is not "image" */}
+            {selectedNode.data?.type !== 'image' && (
+              <div>
+                <label htmlFor="schema" className="block text-sm font-medium text-foreground mb-2">
+                  Schema
+                </label>
+                <textarea
+                  id="schema"
+                  value={selectedNode.data?.schema || ''}
+                  onChange={(e) => updateNodeData('schema', e.target.value)}
+                  rows={4}
+                  className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs resize-none"
+                  placeholder="Enter schema definition"
+                />
+              </div>
+            )}
 
             {/* Link Input */}
             <div>
