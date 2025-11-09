@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
 import {
   FolderKanban,
@@ -8,7 +9,6 @@ import {
   Activity,
   TrendingUp,
   Clock,
-  Plus,
 } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -46,18 +46,11 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50/50 flex items-center">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-white overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 flex items-center">
         <div className="max-w-7xl mx-auto px-8 w-full">
-          {/* Header with Create Button */}
-          <div className="flex items-center justify-start mb-8">
-            <button className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm text-sm">
-              <Plus className="w-4 h-4" />
-              Create New Project
-            </button>
-          </div>
-
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-6 mb-8">
             {/* Total Projects Card */}
@@ -200,5 +193,6 @@ export default function HomePage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }

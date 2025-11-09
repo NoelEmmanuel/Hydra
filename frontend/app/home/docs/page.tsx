@@ -1,14 +1,16 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Image from "next/image";
 import { ArrowRight, CheckCircle2, Link2, Zap, Play } from "lucide-react";
 
 export default function DocsPage() {
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50/50">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-white overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto bg-gray-50/50">
         <div className="max-w-4xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="mb-12">
@@ -394,6 +396,7 @@ export default function DocsPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }
 

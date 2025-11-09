@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -12,6 +13,14 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { isAuthenticated, login } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/home");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,10 +52,9 @@ export default function AuthPage() {
         throw new Error(data.detail || "Authentication failed");
       }
 
-      // Store token in localStorage
+      // Store token in localStorage and update auth context
       if (data.access_token) {
-        localStorage.setItem("auth_token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        login(data.access_token, data.user);
       }
 
       // Redirect to home

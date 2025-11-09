@@ -278,7 +278,6 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                   <SelectItem value="slack">Slack</SelectItem>
                   <SelectItem value="github">GitHub</SelectItem>
                   <SelectItem value="google-drive">Google Drive</SelectItem>
-                  <SelectItem value="postgres">PostgreSQL</SelectItem>
                 </SelectContent>
               </Select>
             </div>

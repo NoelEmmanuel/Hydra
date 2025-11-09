@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { ReactFlow, Background, Connection } from "@xyflow/react";
 import Toolbar from "./Toolbar";
 import NodeSideMenu from "./NodeSideMenu";
@@ -31,6 +31,18 @@ export default function FlowCanvas({
   setSelectedNode,
 }: FlowCanvasProps) {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const hasFittedView = useRef(false);
+
+  // Fit view once when nodes are first loaded
+  useEffect(() => {
+    if (reactFlowInstance && nodes.length > 0 && !hasFittedView.current) {
+      // Small delay to ensure nodes are rendered
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2, maxZoom: 1 });
+        hasFittedView.current = true;
+      }, 200);
+    }
+  }, [reactFlowInstance, nodes.length]);
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
@@ -83,14 +95,12 @@ export default function FlowCanvas({
         onInit={setReactFlowInstance}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
         defaultEdgeOptions={{
           type: 'smoothstep',
           style: { strokeWidth: 2, stroke: '#555' },
           animated: false,
         }}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         panOnDrag={true}
         nodesDraggable={true}
       >

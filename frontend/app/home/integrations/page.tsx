@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Image from "next/image";
 import { Search } from "lucide-react";
 
@@ -42,13 +43,6 @@ const integrations: Integration[] = [
     description: "Read and write files, manage folders, upload documents, and access Google Drive storage for file operations.",
     authorized: false,
   },
-  {
-    id: "postgres",
-    name: "PostgreSQL",
-    icon: "/postgres.png",
-    description: "Execute SQL queries, manage database connections, read and write data, and interact with PostgreSQL databases.",
-    authorized: false,
-  },
 ];
 
 export default function IntegrationsPage() {
@@ -73,9 +67,10 @@ export default function IntegrationsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50/50">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-white overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-8 py-8">
           {/* Search Bar - Sticky */}
           <div className="sticky top-0 z-10 bg-gray-50/50 pb-8 mb-8">
@@ -97,9 +92,9 @@ export default function IntegrationsPage() {
               {filteredIntegrations.map((integration) => (
                 <div
                   key={integration.id}
-                  className="bg-white rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-all flex flex-col group"
+                  className="bg-white rounded-xl p-6 border border-border shadow-sm flex flex-col"
                 >
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Image
                         src={integration.icon}
@@ -111,7 +106,7 @@ export default function IntegrationsPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground mb-2 group-hover:text-green-600 transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2">
                         {integration.name}
                       </h3>
                       <p className="text-sm text-muted-foreground line-clamp-3">
@@ -144,6 +139,7 @@ export default function IntegrationsPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }
 
