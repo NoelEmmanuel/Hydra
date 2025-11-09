@@ -68,6 +68,21 @@ class BaseHeadAgent:
                 
                 # Extract message and tool calls
                 message = response["choices"][0]["message"]
+                
+                # Log nemotron response
+                self.logger.info(f"Nemotron response (iteration {iteration}):")
+                self.logger.info(f"  Role: {message.get('role')}")
+                self.logger.info(f"  Content: {message.get('content', '')[:500]}...")  # First 500 chars
+                if message.get("tool_calls"):
+                    self.logger.info(f"  Tool calls: {len(message.get('tool_calls', []))} tool(s)")
+                    for tc in message.get("tool_calls", []):
+                        self.logger.info(f"    - {tc.get('function', {}).get('name', 'unknown')}")
+                
+                # Log usage stats
+                if "usage" in response:
+                    usage = response["usage"]
+                    self.logger.info(f"  Tokens: {usage.get('prompt_tokens', 0)} prompt + {usage.get('completion_tokens', 0)} completion = {usage.get('total_tokens', 0)} total")
+                
                 self.conversation_history.append({
                     "role": message["role"],
                     "content": message.get("content", ""),
@@ -79,6 +94,14 @@ class BaseHeadAgent:
                     # Agent has finished reasoning, update state
                     final_response = message.get("content", "")
                     updated_state = self._update_state(state, final_response)
+                    
+                    # Store conversation history in state
+                    if "conversation_history" not in updated_state["orchestration_metadata"]:
+                        updated_state["orchestration_metadata"]["conversation_history"] = []
+                    updated_state["orchestration_metadata"]["conversation_history"].extend(
+                        self.conversation_history
+                    )
+                    
                     self.logger.info(f"{self.__class__.__name__} completed successfully")
                     return updated_state
                 
@@ -96,11 +119,13 @@ class BaseHeadAgent:
                     tool_result = self._execute_tool(tool_name, arguments)
                     
                     # Observe: Add tool result to conversation
-                    self.conversation_history.append({
+                    tool_result_message = {
                         "role": "tool",
                         "content": json.dumps(tool_result),
                         "tool_call_id": tool_call.get("id")
-                    })
+                    }
+                    self.conversation_history.append(tool_result_message)
+                    self.logger.info(f"Tool result: {json.dumps(tool_result)[:200]}...")  # First 200 chars
             
             # Max iterations reached
             self.logger.warning(f"{self.__class__.__name__} reached max iterations")
@@ -108,6 +133,12 @@ class BaseHeadAgent:
             error_state["orchestration_metadata"]["current_stage"] = "error"
             error_state["orchestration_metadata"]["errors"].append(
                 f"{self.__class__.__name__} exceeded max iterations"
+            )
+            # Store conversation history even on error
+            if "conversation_history" not in error_state["orchestration_metadata"]:
+                error_state["orchestration_metadata"]["conversation_history"] = []
+            error_state["orchestration_metadata"]["conversation_history"].extend(
+                self.conversation_history
             )
             return error_state
             
@@ -117,6 +148,12 @@ class BaseHeadAgent:
             error_state["orchestration_metadata"]["current_stage"] = "error"
             error_state["orchestration_metadata"]["errors"].append(
                 f"{self.__class__.__name__} error: {str(e)}"
+            )
+            # Store conversation history even on error
+            if "conversation_history" not in error_state["orchestration_metadata"]:
+                error_state["orchestration_metadata"]["conversation_history"] = []
+            error_state["orchestration_metadata"]["conversation_history"].extend(
+                self.conversation_history
             )
             return error_state
     

@@ -1,0 +1,48 @@
+{
+  "models": [
+    {
+      "model_id": "supervisor",
+      "connected_tools": [],
+      "connected_knowledge_bases": [],
+      "is_supervisor": true
+    },
+    {
+      "model_id": "sub_agent_1",
+      "connected_tools": ["tool_1"],
+      "connected_knowledge_bases": ["kb_1"],
+      "is_supervisor": false
+    },
+    {
+      "model_id": "sub_agent_2",
+      "connected_tools": ["tool_2"],
+      "connected_knowledge_bases": ["kb_2"],
+      "is_supervisor": false
+    }
+  ],
+  "knowledge_bases": {
+    "kb_1": {
+      "content": "Sample knowledge base 1 data for fine-tuning"
+    },
+    "kb_2": {
+      "content": "Sample knowledge base 2 data for fine-tuning"
+    }
+  },
+  "tools": [
+    {
+      "tool_id": "tool_1",
+      "tool_config": {
+        "type": "api_tool",
+        "endpoint": "https://api.example.com/tool1"
+      }
+    },
+    {
+      "tool_id": "tool_2",
+      "tool_config": {
+        "type": "api_tool",
+        "endpoint": "https://api.example.com/tool2"
+      }
+    }
+  ],
+  "prompt": "Create a multi-agent system for fraud detection that uses specialized agents for transaction analysis and risk assessment."
+}
+

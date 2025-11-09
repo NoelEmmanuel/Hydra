@@ -1,6 +1,6 @@
 """Main Hydra Orchestrator class."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Callable
 from .state import WorkflowInput, WorkflowState
 from .nemotron_client import NemotronClient
 from .utils import (
@@ -20,7 +20,7 @@ class HydraOrchestrator:
         Initialize Hydra Orchestrator.
         
         Args:
-            api_key: OpenRouter API key (optional, reads from env if not provided)
+            api_key: NVIDIA API key (optional, reads from NVIDIA_API_KEY env var if not provided)
         """
         self.logger = get_logger(__name__)
         self.nemotron_client = NemotronClient(api_key=api_key)
@@ -64,12 +64,17 @@ class HydraOrchestrator:
             self.logger.error(f"Input validation failed: {str(e)}")
             raise
     
-    async def execute_workflow(self, input_json: Dict[str, Any]) -> WorkflowState:
+    async def execute_workflow(
+        self, 
+        input_json: Dict[str, Any], 
+        state_update_callback: Optional[Callable[[WorkflowState], None]] = None
+    ) -> WorkflowState:
         """
         Execute the complete workflow: Trainer → Deployer → Monitor.
         
         Args:
             input_json: Input JSON with models, knowledge_bases, tools, prompt
+            state_update_callback: Optional callback function(state) to update external state storage
             
         Returns:
             Final WorkflowState with all outputs
@@ -82,9 +87,17 @@ class HydraOrchestrator:
             state = create_initial_state(workflow_input)
             state["orchestration_metadata"]["current_stage"] = "trainer"
             
+            # Update state if callback provided
+            if state_update_callback:
+                state_update_callback(state.copy())
+            
             # Phase 1: Trainer Head
             self.logger.info("Executing Trainer Head...")
             state = await self.trainer_agent.execute(state)
+            
+            # Update state after trainer phase
+            if state_update_callback:
+                state_update_callback(state.copy())
             
             if state["orchestration_metadata"]["current_stage"] == "error":
                 self.logger.error("Trainer Head failed")
@@ -93,7 +106,16 @@ class HydraOrchestrator:
             # Phase 2: Deployer Head
             self.logger.info("Executing Deployer Head...")
             state["orchestration_metadata"]["current_stage"] = "deployer"
+            
+            # Update state before deployer phase
+            if state_update_callback:
+                state_update_callback(state.copy())
+            
             state = await self.deployer_agent.execute(state)
+            
+            # Update state after deployer phase
+            if state_update_callback:
+                state_update_callback(state.copy())
             
             if state["orchestration_metadata"]["current_stage"] == "error":
                 self.logger.error("Deployer Head failed")
@@ -102,7 +124,16 @@ class HydraOrchestrator:
             # Phase 3: Monitor Head
             self.logger.info("Executing Monitor Head...")
             state["orchestration_metadata"]["current_stage"] = "monitor"
+            
+            # Update state before monitor phase
+            if state_update_callback:
+                state_update_callback(state.copy())
+            
             state = await self.monitor_agent.execute(state)
+            
+            # Update state after monitor phase
+            if state_update_callback:
+                state_update_callback(state.copy())
             
             if state["orchestration_metadata"]["current_stage"] == "error":
                 self.logger.error("Monitor Head failed")
@@ -112,15 +143,22 @@ class HydraOrchestrator:
             state["orchestration_metadata"]["current_stage"] = "completed"
             self.logger.info("Workflow execution completed successfully")
             
+            # Final state update
+            if state_update_callback:
+                state_update_callback(state.copy())
+            
             return state
             
         except Exception as e:
             self.logger.error(f"Workflow execution failed: {str(e)}")
             if 'state' in locals():
-                return add_error_to_state(state, str(e))
+                error_state = add_error_to_state(state, str(e))
+                if state_update_callback:
+                    state_update_callback(error_state.copy())
+                return error_state
             else:
                 # Create minimal error state
-                return WorkflowState(
+                error_state = WorkflowState(
                     input_config=workflow_input if 'workflow_input' in locals() else {},
                     trainer_outputs={},
                     deployer_outputs={},
@@ -132,4 +170,7 @@ class HydraOrchestrator:
                         "conversation_history": []
                     }
                 )
+                if state_update_callback:
+                    state_update_callback(error_state.copy())
+                return error_state
 
