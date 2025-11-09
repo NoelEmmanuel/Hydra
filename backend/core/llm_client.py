@@ -31,6 +31,9 @@ def chat(
     """
     base_url = get_base_url(endpoint)
     
+    # Ensure base_url doesn't have trailing slash before appending path
+    base_url = base_url.rstrip('/')
+    
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})

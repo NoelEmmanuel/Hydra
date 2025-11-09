@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
+import requests
 from core.system_manager import SystemManager
 
 app = FastAPI()
@@ -78,6 +79,16 @@ async def chat_with_system(system_id: str, request: ChatRequest):
         return {"response": result}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except requests.exceptions.ConnectionError as e:
+        raise HTTPException(
+            status_code=503, 
+            detail=f"Connection error: Unable to reach LLM endpoint. Please check if the endpoint server is running and accessible. Error: {str(e)}"
+        )
+    except requests.exceptions.Timeout as e:
+        raise HTTPException(
+            status_code=504,
+            detail=f"Timeout error: The LLM endpoint did not respond in time. Please check if the endpoint server is running. Error: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
 
