@@ -11,3 +11,6 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e
 # Create Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Export for use in other modules
+__all__ = ["supabase", "SUPABASE_URL", "SUPABASE_KEY"]
+

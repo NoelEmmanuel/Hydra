@@ -53,8 +53,8 @@ export default function AuthPage() {
       }
 
       // Store token in localStorage and update auth context
-      if (data.access_token) {
-        login(data.access_token, data.user);
+      if (data.access_token && data.refresh_token) {
+        login(data.access_token, data.refresh_token, data.user);
       }
 
       // Redirect to home

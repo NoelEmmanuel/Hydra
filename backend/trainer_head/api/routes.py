@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from trainer_head.config import supabase
+import httpx
+from trainer_head.config import supabase, SUPABASE_URL, SUPABASE_KEY
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer()
@@ -19,8 +20,17 @@ class SignInRequest(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: dict
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
 
 class UserResponse(BaseModel):
     id: str
@@ -62,12 +72,13 @@ async def signup(request: SignUpRequest):
                     detail="Account created but email confirmation is required. Please check your email."
                 )
             
-            access_token = signin_response.session.access_token
+            session = signin_response.session
         else:
-            access_token = response.session.access_token
+            session = response.session
         
         return {
-            "access_token": access_token,
+            "access_token": session.access_token,
+            "refresh_token": session.refresh_token,
             "token_type": "bearer",
             "user": {
                 "id": response.user.id,
@@ -115,6 +126,7 @@ async def signin(request: SignInRequest):
         
         return {
             "access_token": session.access_token,
+            "refresh_token": session.refresh_token,
             "token_type": "bearer",
             "user": {
                 "id": user.id,
@@ -155,6 +167,39 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+@router.post("/refresh", response_model=RefreshResponse)
+async def refresh_token(request: RefreshRequest):
+    """Refresh access token using refresh token"""
+    try:
+        # Use Supabase REST API to refresh token
+        # Supabase refresh endpoint: {url}/auth/v1/token?grant_type=refresh_token
+        refresh_url = f"{SUPABASE_URL}/auth/v1/token?grant_type=refresh_token"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                refresh_url,
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Content-Type": "application/json",
+                },
+                json={"refresh_token": request.refresh_token},
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid refresh token")
+            
+            data = response.json()
+            
+            return {
+                "access_token": data["access_token"],
+                "refresh_token": data["refresh_token"],
+                "token_type": "bearer"
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Failed to refresh token: {str(e)}")
 
 @router.post("/signout")
 async def signout(credentials: HTTPAuthorizationCredentials = Depends(security)):
