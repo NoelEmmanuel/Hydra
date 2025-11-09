@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 
@@ -6,7 +8,7 @@ export default function Header() {
     <header className="sticky top-8 left-0 right-0 z-50 mx-auto w-11/12 max-w-6xl bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl px-8 py-3 shadow-lg">
       <nav className="flex items-center gap-12 w-full">
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center overflow-hidden relative">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: '#341f4f' }}>
             <Image 
               src="/logo.png" 
               alt="Hydra" 
@@ -45,7 +47,10 @@ export default function Header() {
 
         <Link
           href="/auth"
-          className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 transition-colors flex-shrink-0"
+          className="px-6 py-2 text-white rounded-lg font-medium text-sm transition-colors flex-shrink-0"
+          style={{ backgroundColor: '#341f4f' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a1840'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#341f4f'}
         >
           Get Started
         </Link>

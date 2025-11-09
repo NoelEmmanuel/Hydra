@@ -9,7 +9,7 @@ import "@xyflow/react/dist/style.css";
 import { nodeTypes } from "@/components/nodes";
 import FlowCanvas from "@/components/projects/FlowCanvas";
 import { useAuth } from "@/contexts/AuthContext";
-import { Rocket } from "lucide-react";
+import { Rocket, Copy, Check } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -19,6 +19,7 @@ interface Project {
   description: string | null;
   status: string;
   canvas_data: { nodes: any[]; edges: any[] } | null;
+  endpoint: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +91,8 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
   const { token } = useAuth();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const coreNodeEnsuredRef = useRef(false);
@@ -358,6 +361,33 @@ export default function ProjectPage() {
 
   const isDeployEnabled = canDeploy();
 
+  const handleDeploy = async () => {
+    if (!token || !projectId || !isDeployEnabled || isDeploying) return;
+
+    setIsDeploying(true);
+    try {
+      const response = await fetch(`${API_URL}/api/projects/${projectId}/deploy`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Failed to deploy project");
+      }
+
+      const updatedProject = await response.json();
+      setProject(updatedProject);
+    } catch (error) {
+      console.error("Error deploying project:", error);
+      // You could show an error toast here
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
@@ -455,26 +485,61 @@ export default function ProjectPage() {
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-gray-50/50 flex flex-col items-center justify-center px-8">
         <div className="w-full max-w-[calc(100%-2rem)]">
-          {/* Project Title - Editable */}
-          {isEditingTitle ? (
-            <input
-              type="text"
-              value={projectName}
-              onChange={handleTitleChange}
-              onBlur={handleTitleBlur}
-              onKeyDown={handleTitleKeyDown}
-              className="text-2xl font-semibold text-foreground mb-6 bg-transparent border-b-2 border-green-600 focus:outline-none w-full"
-              autoFocus
-            />
-          ) : (
-            <h1 
-              className="text-2xl font-semibold text-foreground mb-6 text-left truncate cursor-text" 
-              onDoubleClick={handleTitleDoubleClick}
-              title={projectName || "Project"}
-            >
-              {projectName || project?.name || "Untitled"}
-            </h1>
-          )}
+          {/* Project Title and API Endpoint */}
+          <div className="flex items-center justify-between mb-6 gap-4">
+            <div className="flex-1">
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={handleTitleChange}
+                  onBlur={handleTitleBlur}
+                  onKeyDown={handleTitleKeyDown}
+                  className="text-2xl font-semibold text-foreground bg-transparent border-b-2 focus:outline-none w-full"
+                  style={{ borderColor: '#341f4f' }}
+                  autoFocus
+                />
+              ) : (
+                <h1 
+                  className="text-2xl font-semibold text-foreground text-left truncate cursor-text" 
+                  onDoubleClick={handleTitleDoubleClick}
+                  title={projectName || "Project"}
+                >
+                  {projectName || project?.name || "Untitled"}
+                </h1>
+              )}
+            </div>
+            {/* API Endpoint URL - Only show if endpoint exists (after deployment) */}
+            {project?.endpoint && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-mono" style={{ color: '#341f4f' }}>
+                  {project.endpoint}
+                </span>
+                <button
+                  onClick={async () => {
+                    if (!project.endpoint) return;
+                    try {
+                      await navigator.clipboard.writeText(project.endpoint);
+                      setIsCopied(true);
+                      setTimeout(() => {
+                        setIsCopied(false);
+                      }, 1500);
+                    } catch (err) {
+                      console.error('Failed to copy:', err);
+                    }
+                  }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                  title="Copy API endpoint"
+                >
+                  {isCopied ? (
+                    <Check className="w-4 h-4" style={{ color: '#341f4f' }} />
+                  ) : (
+                    <Copy className="w-4 h-4" style={{ color: '#341f4f' }} />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
           
           {/* Canvas Card */}
           {isLoading ? (
@@ -500,15 +565,16 @@ export default function ProjectPage() {
               
               {/* Deploy Button - positioned on bottom right */}
               <button 
-                disabled={!isDeployEnabled}
+                disabled={!isDeployEnabled || isDeploying}
+                onClick={handleDeploy}
                 className={`absolute bottom-6 right-6 px-4 py-2 rounded-lg font-medium text-sm transition-colors z-30 flex items-center gap-2 ${
-                  isDeployEnabled
+                  isDeployEnabled && !isDeploying
                     ? "bg-black text-white hover:bg-gray-800 cursor-pointer"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 <Rocket className="w-4 h-4" />
-                Deploy
+                {isDeploying ? "Deploying..." : "Deploy"}
               </button>
             </div>
           </div>

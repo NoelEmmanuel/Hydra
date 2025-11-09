@@ -57,7 +57,7 @@ export default function Sidebar() {
       {/* Logo Section */}
       <div className="p-4 shrink-0">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center overflow-hidden relative">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: '#341f4f' }}>
             <Image 
               src="/logo.png" 
               alt="Hydra" 

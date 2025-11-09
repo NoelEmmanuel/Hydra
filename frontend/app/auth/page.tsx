@@ -73,7 +73,7 @@ export default function AuthPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center overflow-hidden relative">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: '#341f4f' }}>
                 <Image 
                   src="/logo.png" 
                   alt="Hydra" 
@@ -106,7 +106,15 @@ export default function AuthPage() {
                     type="text"
                     id="name"
                     name="name"
-                    className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                    onFocus={(e) => {
+                      e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                      e.currentTarget.style.borderColor = 'transparent';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.boxShadow = '';
+                      e.currentTarget.style.borderColor = '';
+                    }}
                     placeholder="John Doe"
                   />
                 </div>
@@ -120,7 +128,15 @@ export default function AuthPage() {
                   type="email"
                   id="email"
                   name="email"
-                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                  onFocus={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = '';
+                    e.currentTarget.style.borderColor = '';
+                  }}
                   placeholder="you@example.com"
                   required
                 />
@@ -134,7 +150,15 @@ export default function AuthPage() {
                   type="password"
                   id="password"
                   name="password"
-                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                  onFocus={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = '';
+                    e.currentTarget.style.borderColor = '';
+                  }}
                   placeholder="••••••••"
                   required
                 />
@@ -142,7 +166,7 @@ export default function AuthPage() {
 
               {isSignIn && (
                 <div className="flex items-center justify-end">
-                  <a href="#" className="text-sm text-green-600 hover:text-green-700 transition-colors">
+                  <a href="#" className="text-sm transition-colors" style={{ color: '#341f4f' }} onMouseEnter={(e) => e.currentTarget.style.color = '#2a1840'} onMouseLeave={(e) => e.currentTarget.style.color = '#341f4f'}>
                     Forgot password?
                   </a>
                 </div>
@@ -153,16 +177,17 @@ export default function AuthPage() {
                   <label className="flex items-start gap-2 text-sm text-muted-foreground">
                     <input
                       type="checkbox"
-                      className="mt-0.5 w-4 h-4 rounded border-input text-green-600 focus:ring-green-600"
+                      className="mt-0.5 w-4 h-4 rounded border-input"
+                      style={{ accentColor: '#341f4f' }}
                       required
                     />
                     <span>
                       I agree to the{" "}
-                      <a href="#" className="text-green-600 hover:text-green-700 transition-colors">
+                      <a href="#" className="transition-colors" style={{ color: '#341f4f' }} onMouseEnter={(e) => e.currentTarget.style.color = '#2a1840'} onMouseLeave={(e) => e.currentTarget.style.color = '#341f4f'}>
                         Terms of Service
                       </a>{" "}
                       and{" "}
-                      <a href="#" className="text-green-600 hover:text-green-700 transition-colors">
+                      <a href="#" className="transition-colors" style={{ color: '#341f4f' }} onMouseEnter={(e) => e.currentTarget.style.color = '#2a1840'} onMouseLeave={(e) => e.currentTarget.style.color = '#341f4f'}>
                         Privacy Policy
                       </a>
                     </span>
@@ -179,7 +204,10 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 bg-green-600 text-white rounded-2xl font-semibold hover:bg-green-700 transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 text-white rounded-2xl font-semibold transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#341f4f' }}
+                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#2a1840')}
+                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#341f4f')}
               >
                 {isLoading ? "Please wait..." : isSignIn ? "Sign In" : "Create Account"}
               </button>
@@ -193,7 +221,10 @@ export default function AuthPage() {
                 Don't have an account?{" "}
                 <button
                   onClick={() => setIsSignIn(false)}
-                  className="text-green-600 hover:text-green-700 font-medium transition-colors"
+                  className="font-medium transition-colors"
+                  style={{ color: '#341f4f' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#2a1840'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#341f4f'}
                 >
                   Sign up
                 </button>
@@ -203,7 +234,10 @@ export default function AuthPage() {
                 Already have an account?{" "}
                 <button
                   onClick={() => setIsSignIn(true)}
-                  className="text-green-600 hover:text-green-700 font-medium transition-colors"
+                  className="font-medium transition-colors"
+                  style={{ color: '#341f4f' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#2a1840'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#341f4f'}
                 >
                   Sign in
                 </button>

@@ -52,7 +52,15 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.goal || ''}
                 onChange={(e) => updateNodeData('goal', e.target.value)}
                 rows={4}
-                className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs resize-none"
+                className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none transition-colors text-xs resize-none"
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = '';
+                }}
                 placeholder="Describe overall function of this agentic workflow"
               />
             </div> 
@@ -66,7 +74,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.model || ""}
                 onValueChange={(value) => updateNodeData('model', value)}
               >
-                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs">
+                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none transition-colors text-xs" style={{ '--ring-color': '#341f4f' } as React.CSSProperties}>
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -117,7 +125,8 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-lg font-semibold text-foreground bg-transparent border-b-2 border-green-600 focus:outline-none w-full"
+                className="text-lg font-semibold text-foreground bg-transparent border-b-2 focus:outline-none w-full"
+                style={{ borderColor: '#341f4f' }}
                 autoFocus
               />
             ) : (
@@ -139,7 +148,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.source || ""}
                 onValueChange={(value) => updateNodeData('source', value)}
               >
-                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs">
+                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none transition-colors text-xs" style={{ '--ring-color': '#341f4f' } as React.CSSProperties}>
                   <SelectValue placeholder="Select a source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -162,7 +171,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.type || ""}
                 onValueChange={(value) => updateNodeData('type', value)}
               >
-                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs">
+                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none transition-colors text-xs" style={{ '--ring-color': '#341f4f' } as React.CSSProperties}>
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -188,7 +197,15 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                   value={selectedNode.data?.schema || ''}
                   onChange={(e) => updateNodeData('schema', e.target.value)}
                   rows={4}
-                  className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs resize-none"
+                  className="w-full px-3 pt-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none transition-colors text-xs resize-none"
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = '';
+                }}
                   placeholder="Enter schema definition"
                 />
               </div>
@@ -204,7 +221,15 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 id="link"
                 value={selectedNode.data?.link || ''}
                 onChange={(e) => updateNodeData('link', e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs"
+                className="w-full px-3 py-2 border border-input rounded-lg bg-gray-100 text-foreground placeholder:text-gray-400 focus:outline-none transition-colors text-xs"
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = '';
+                }}
                 placeholder="Enter link URL"
               />
             </div>
@@ -248,7 +273,8 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-lg font-semibold text-foreground bg-transparent border-b-2 border-green-600 focus:outline-none w-full"
+                className="text-lg font-semibold text-foreground bg-transparent border-b-2 focus:outline-none w-full"
+                style={{ borderColor: '#341f4f' }}
                 autoFocus
               />
             ) : (
@@ -270,7 +296,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.source || ""}
                 onValueChange={(value) => updateNodeData('source', value)}
               >
-                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs">
+                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none transition-colors text-xs" style={{ '--ring-color': '#341f4f' } as React.CSSProperties}>
                   <SelectValue placeholder="Select a source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -321,7 +347,8 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-lg font-semibold text-foreground bg-transparent border-b-2 border-green-600 focus:outline-none w-full"
+                className="text-lg font-semibold text-foreground bg-transparent border-b-2 focus:outline-none w-full"
+                style={{ borderColor: '#341f4f' }}
                 autoFocus
               />
             ) : (
@@ -343,7 +370,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                 value={selectedNode.data?.type || ""}
                 onValueChange={(value) => updateNodeData('type', value)}
               >
-                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-colors text-xs">
+                <SelectTrigger className="w-full h-9 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none transition-colors text-xs" style={{ '--ring-color': '#341f4f' } as React.CSSProperties}>
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
                 <SelectContent>

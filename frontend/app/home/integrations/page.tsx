@@ -81,7 +81,15 @@ export default function IntegrationsPage() {
                 placeholder="Search integrations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none transition-colors text-sm"
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = '';
+                }}
               />
             </div>
           </div>
@@ -122,8 +130,11 @@ export default function IntegrationsPage() {
                       className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
                         integrationStates[integration.id]
                           ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          : "bg-green-600 text-white hover:bg-green-700"
+                          : "text-white"
                       }`}
+                      style={!integrationStates[integration.id] ? { backgroundColor: '#341f4f' } : {}}
+                      onMouseEnter={(e) => !integrationStates[integration.id] && (e.currentTarget.style.backgroundColor = '#2a1840')}
+                      onMouseLeave={(e) => !integrationStates[integration.id] && (e.currentTarget.style.backgroundColor = '#341f4f')}
                     >
                       {integrationStates[integration.id] ? "Authorized" : "Authorize"}
                     </button>

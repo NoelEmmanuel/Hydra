@@ -23,7 +23,7 @@ export default function DocsPage() {
           {/* Step 1: Authorize Integrations */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>1</div>
               <h2 className="text-2xl font-semibold text-foreground">Authorize Your Integrations</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -54,7 +54,12 @@ export default function DocsPage() {
                       <p className="text-xs text-muted-foreground">{integration.description}</p>
                     </div>
                   </div>
-                  <button className="w-full py-2 px-3 bg-green-600 text-white rounded-lg font-medium text-xs hover:bg-green-700 transition-colors">
+                  <button 
+                    className="w-full py-2 px-3 text-white rounded-lg font-medium text-xs transition-colors"
+                    style={{ backgroundColor: '#341f4f' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a1840'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#341f4f'}
+                  >
                     Authorize
                   </button>
                 </div>
@@ -70,7 +75,7 @@ export default function DocsPage() {
           {/* Step 2: Create a Project */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>2</div>
               <h2 className="text-2xl font-semibold text-foreground">Create a New Project</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -86,7 +91,7 @@ export default function DocsPage() {
                     AI-powered customer support system
                   </p>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-700">
+                <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: '#f3eef7', color: '#341f4f' }}>
                   deployed
                 </span>
               </div>
@@ -100,7 +105,7 @@ export default function DocsPage() {
           {/* Step 3: Understanding Nodes */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>3</div>
               <h2 className="text-2xl font-semibold text-foreground">Understanding Node Types</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -248,7 +253,7 @@ export default function DocsPage() {
           {/* Step 4: Connect Nodes */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>4</div>
               <h2 className="text-2xl font-semibold text-foreground">Connect Nodes</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -286,7 +291,7 @@ export default function DocsPage() {
               </div>
               <div className="bg-gray-50 rounded-lg p-4 border border-border">
                 <div className="flex items-start gap-3">
-                  <Link2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <Link2 className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: '#341f4f' }} />
                   <div>
                     <p className="text-sm font-medium text-foreground mb-1">How to Connect:</p>
                     <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
@@ -304,7 +309,7 @@ export default function DocsPage() {
           {/* Step 5: Configure Nodes */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">5</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>5</div>
               <h2 className="text-2xl font-semibold text-foreground">Configure Your Nodes</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -317,11 +322,11 @@ export default function DocsPage() {
                   <h4 className="font-semibold text-foreground mb-3">Core Node Settings</h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#341f4f' }} />
                       <span>Define the workflow objective</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#341f4f' }} />
                       <span>Select Nemotron model size</span>
                     </li>
                   </ul>
@@ -330,11 +335,11 @@ export default function DocsPage() {
                   <h4 className="font-semibold text-foreground mb-3">Other Node Settings</h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#341f4f' }} />
                       <span>Rename nodes by double-clicking</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#341f4f' }} />
                       <span>Configure source, type, and schema</span>
                     </li>
                   </ul>
@@ -346,7 +351,7 @@ export default function DocsPage() {
           {/* Step 6: Deploy */}
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">6</div>
+              <div className="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: '#341f4f' }}>6</div>
               <h2 className="text-2xl font-semibold text-foreground">Deploy Your Workflow</h2>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -369,7 +374,7 @@ export default function DocsPage() {
 
           {/* Next Steps */}
           <section className="mb-8">
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-200">
+            <div className="rounded-xl p-8 border" style={{ background: 'linear-gradient(to right, #f3eef7, #e8e3f0)', borderColor: '#a68bb8' }}>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Next Steps</h2>
               <div className="grid grid-cols-2 gap-6">
                 <div>

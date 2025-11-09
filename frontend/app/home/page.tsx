@@ -69,8 +69,8 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">Active Deployments</span>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Rocket className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <Rocket className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">12</div>
@@ -133,7 +133,7 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-foreground">Success Rate</h3>
-                <TrendingUp className="w-5 h-5 text-green-600" />
+                <TrendingUp className="w-5 h-5" style={{ color: '#341f4f' }} />
               </div>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={successRateData}>
@@ -173,12 +173,21 @@ export default function HomePage() {
               {recentProjects.map((project, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-4 border border-border hover:border-gray-300 transition-colors cursor-pointer group">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-medium text-foreground text-sm group-hover:text-green-600 transition-colors">{project.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      project.status === "deployed" 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-gray-200 text-gray-700"
-                    }`}>
+                    <h3 
+                      className="font-medium text-foreground text-sm transition-colors"
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                    >
+                      {project.name}
+                    </h3>
+                    <span 
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        project.status === "deployed" 
+                          ? "text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      style={project.status === "deployed" ? { backgroundColor: '#341f4f' } : {}}
+                    >
                       {project.status}
                     </span>
                   </div>

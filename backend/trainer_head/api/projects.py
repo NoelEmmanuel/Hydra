@@ -18,6 +18,7 @@ class ProjectUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     canvas_data: Optional[Dict[str, Any]] = None
+    endpoint: Optional[str] = None
 
 class ProjectResponse(BaseModel):
     id: str
@@ -26,6 +27,7 @@ class ProjectResponse(BaseModel):
     description: Optional[str]
     status: str
     canvas_data: Optional[Dict[str, Any]] = None
+    endpoint: Optional[str] = None
     created_at: str
     updated_at: str
 
@@ -132,6 +134,8 @@ async def update_project(
             update_data["status"] = project_update.status
         if project_update.canvas_data is not None:
             update_data["canvas_data"] = project_update.canvas_data
+        if project_update.endpoint is not None:
+            update_data["endpoint"] = project_update.endpoint
         
         # Update project
         response = supabase.table("projects").update(update_data).eq("id", project_id).execute()
@@ -144,6 +148,36 @@ async def update_project(
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to update project: {str(e)}")
+
+@router.post("/{project_id}/deploy", response_model=ProjectResponse)
+async def deploy_project(
+    project_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Deploy a project and generate an API endpoint"""
+    try:
+        # Verify project belongs to user
+        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).single().execute()
+        if not check_response.data:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Generate dummy endpoint URL
+        endpoint = f"https://api.hydra.ai/v1/projects/{project_id}"
+        
+        # Update project with endpoint and set status to deployed
+        response = supabase.table("projects").update({
+            "endpoint": endpoint,
+            "status": "deployed"
+        }).eq("id", project_id).execute()
+        
+        if not response.data or len(response.data) == 0:
+            raise HTTPException(status_code=400, detail="Failed to deploy project")
+        
+        return ProjectResponse(**response.data[0])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to deploy project: {str(e)}")
 
 @router.delete("/{project_id}")
 async def delete_project(
