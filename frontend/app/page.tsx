@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import { ArrowRight, Zap, Brain, Gauge, Database, Workflow, Shield } from "lucide-react";
 
-export default function Index() {
+export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -263,3 +263,4 @@ export default function Index() {
     </div>
   );
 }
+

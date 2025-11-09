@@ -13,6 +13,9 @@
 /build
 /dist
 frontend/dist
+frontend/.next
+.next
+out
 
 # misc
 .DS_Store
