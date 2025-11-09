@@ -108,9 +108,38 @@ class SystemManager:
         prompt = routing_result['prompt']
         
         # Router routes to sub-agent
-        result = router.route_to_sub_agent(model_id, prompt)
+        sub_agent_result = router.route_to_sub_agent(model_id, prompt)
         
-        return result
+        # Core agent refines the response to clean up verbose output
+        try:
+            refined_result = core_agent.refine_response(sub_agent_result, query)
+            return refined_result
+        except Exception as e:
+            # If refinement fails, return original response with simple cleanup
+            print(f"Response refinement failed: {e}, returning original response")
+            # Apply simple cleanup as fallback
+            try:
+                cleaned_result = core_agent._clean_response_simple(sub_agent_result)
+                # Enforce max length even in fallback
+                from .config import MAX_RESPONSE_LENGTH
+                if len(cleaned_result) > MAX_RESPONSE_LENGTH:
+                    truncated = cleaned_result[:MAX_RESPONSE_LENGTH]
+                    last_space = truncated.rfind(' ')
+                    if last_space > MAX_RESPONSE_LENGTH * 0.8:
+                        cleaned_result = truncated[:last_space] + "..."
+                    else:
+                        cleaned_result = truncated + "..."
+                return cleaned_result
+            except Exception:
+                # Last resort: return original response (truncated if too long)
+                from .config import MAX_RESPONSE_LENGTH
+                if len(sub_agent_result) > MAX_RESPONSE_LENGTH:
+                    truncated = sub_agent_result[:MAX_RESPONSE_LENGTH]
+                    last_space = truncated.rfind(' ')
+                    if last_space > MAX_RESPONSE_LENGTH * 0.8:
+                        return truncated[:last_space] + "..."
+                    return truncated + "..."
+                return sub_agent_result
     
     def delete_system(self, system_id: str) -> bool:
         """

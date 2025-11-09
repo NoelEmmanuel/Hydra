@@ -37,6 +37,9 @@ MODEL_NAME = os.getenv("MODEL_NAME", "nvidia/NVIDIA-Nemotron-Nano-9B-v2")
 # Default max tokens
 DEFAULT_MAX_TOKENS = int(os.getenv("DEFAULT_MAX_TOKENS", "256"))
 
+# Maximum response length (in characters) for refined responses
+MAX_RESPONSE_LENGTH = int(os.getenv("MAX_RESPONSE_LENGTH", "2000"))
+
 
 def get_base_url(endpoint: str) -> str:
     """
