@@ -1,0 +1,29 @@
+{
+  "mission": "To manage a multi-agent system with GitHub integration",
+  "models": [
+    {
+      "id": 1,
+      "name": "Code Analysis Model",
+      "knowledge_bases": [1],
+      "tools": [1]
+    }
+  ],
+  "knowledge_bases": [
+    {
+      "id": 1,
+      "name": "Code Documentation KB",
+      "url": "https://s3.amazonaws.com/code-docs-kb.json",
+      "description": "A knowledge base for code documentation"
+    }
+  ],
+  "tools": [
+    {
+      "id": 1,
+      "name": "GitHub Tool",
+      "description": "Read file contents from GitHub repositories",
+      "api_url": "https://api.github.com",
+      "api_key": "ghp_your_personal_access_token_here"
+    }
+  ]
+}
+

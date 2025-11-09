@@ -1,6 +1,8 @@
 """
 Router for routing queries from core agent to sub-agents.
 """
+import json
+import re
 from typing import Dict, List, Any, Optional
 from .llm_client import chat
 from .config import ENDPOINT_EVEN, ENDPOINT_ODD
@@ -96,18 +98,111 @@ You can use tools by requesting them through MCP (Model Context Protocol) capabi
 
 Your task: {prompt}"""
         
-        # Call sub-agent LLM
-        response = chat(
-            prompt=prompt,
-            endpoint=endpoint,
-            system_prompt=system_prompt,
-            max_tokens=1024
-        )
+        # Call sub-agent LLM and handle tool calls iteratively
+        current_prompt = prompt
+        conversation_history = []
         
-        # TODO: Handle tool calls if sub-agent requests them
-        # For now, return the response directly
-        # In a full implementation, we would parse the response for tool calls,
-        # execute them, and potentially make follow-up LLM calls
+        for iteration in range(max_iterations):
+            # Call sub-agent LLM
+            response = chat(
+                prompt=current_prompt,
+                endpoint=endpoint,
+                system_prompt=system_prompt,
+                max_tokens=2048  # Increased for tool call responses
+            )
+            
+            # Check if response contains a tool call
+            tool_call = self._parse_tool_call_from_response(response)
+            
+            if tool_call:
+                # Execute tool call
+                tool_result = self._execute_tool_and_format_result(tool_call)
+                
+                # Add to conversation history
+                conversation_history.append(f"Agent: {response}")
+                conversation_history.append(f"Tool Result: {tool_result}")
+                
+                # Create follow-up prompt with tool result
+                current_prompt = f"""Previous response: {response}
+
+Tool execution result:
+{tool_result}
+
+Please process the tool result and provide your final answer."""
+            else:
+                # No tool call, return the response
+                if conversation_history:
+                    # Include conversation history in final response
+                    return "\n\n".join(conversation_history) + f"\n\nFinal Answer: {response}"
+                return response
         
+        # Max iterations reached
+        if conversation_history:
+            return "\n\n".join(conversation_history) + f"\n\nFinal Response: {response}"
         return response
+    
+    def _parse_tool_call_from_response(self, response: str) -> Optional[Dict[str, Any]]:
+        """
+        Parse tool call request from sub-agent response.
+        Looks for MCP tool call format in the response.
+        
+        Args:
+            response: Sub-agent response text
+        
+        Returns:
+            Dict with tool call info or None if no tool call detected
+        """
+        # Try to find JSON tool call in response
+        # Pattern: tool call might be in JSON format like:
+        # {"tool_id": 1, "action": "get_file_contents", "owner": "...", "repo": "...", "path": "..."}
+        # or similar formats
+        
+        # Look for JSON objects in the response
+        json_pattern = r'\{[^{}]*"tool_id"[^{}]*\}'
+        matches = re.findall(json_pattern, response, re.DOTALL)
+        
+        for match in matches:
+            try:
+                tool_call = json.loads(match)
+                if "tool_id" in tool_call:
+                    return tool_call
+            except:
+                continue
+        
+        # Also check for simpler patterns like "use tool 1" or "call tool with..."
+        # For now, we'll rely on JSON format
+        
+        return None
+    
+    def _execute_tool_and_format_result(self, tool_call: Dict[str, Any]) -> str:
+        """
+        Execute a tool call and format the result for inclusion in agent context.
+        
+        Args:
+            tool_call: Tool call dict with tool_id and parameters
+        
+        Returns:
+            Formatted string with tool execution result
+        """
+        tool_id = tool_call.get('tool_id')
+        if not tool_id:
+            return "Error: Tool call missing tool_id"
+        
+        # Execute tool call
+        result = handle_mcp_tool_call(tool_id, self.tools, tool_call)
+        
+        if result.get('success'):
+            tool_result = result.get('result', {})
+            # Format result nicely for agent
+            if isinstance(tool_result, dict):
+                if 'content' in tool_result:
+                    # GitHub file contents
+                    return f"Tool execution successful:\nFile: {tool_result.get('path', 'unknown')}\nContent:\n{tool_result['content']}"
+                else:
+                    return f"Tool execution successful: {json.dumps(tool_result, indent=2)}"
+            else:
+                return f"Tool execution successful: {str(tool_result)}"
+        else:
+            error = result.get('error', 'Unknown error')
+            return f"Tool execution failed: {error}"
 
