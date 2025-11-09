@@ -57,12 +57,12 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">Total Projects</span>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FolderKanban className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <FolderKanban className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">24</div>
-              <div className="text-sm text-muted-foreground">+3 from last month</div>
+              <div className="text-sm text-muted-foreground">+3 from yesterday</div>
             </div>
 
             {/* Active Deployments Card */}
@@ -81,8 +81,8 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">API Calls Today</span>
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <Activity className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">1.2K</div>
@@ -151,9 +151,9 @@ export default function HomePage() {
                   <Line 
                     type="monotone" 
                     dataKey="rate" 
-                    stroke="#22c55e" 
+                    stroke="#341f4f" 
                     strokeWidth={3}
-                    dot={{ fill: '#22c55e', r: 4 }}
+                    dot={{ fill: '#341f4f', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>

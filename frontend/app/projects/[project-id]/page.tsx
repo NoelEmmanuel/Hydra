@@ -96,6 +96,7 @@ export default function ProjectPage() {
   const { token } = useAuth();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const coreNodeEnsuredRef = useRef(false);
+  const initialCanvasDataRef = useRef<{ nodes: any[]; edges: any[] } | null>(null);
 
   const fetchProject = useCallback(async () => {
     if (!token || !projectId) {
@@ -131,14 +132,26 @@ export default function ProjectPage() {
       
       // Always ensure core node exists
       let nodesToSet = defaultNodes;
+      let edgesToSet: any[] = [];
       
       if (data.canvas_data && Array.isArray(data.canvas_data.nodes)) {
         // Ensure core node exists and is properly configured
         nodesToSet = ensureCoreNode(data.canvas_data.nodes);
       }
       
+      if (data.canvas_data && Array.isArray(data.canvas_data.edges)) {
+        edgesToSet = data.canvas_data.edges;
+      }
+      
       setNodes(nodesToSet);
-      setEdges(data.canvas_data?.edges || []);
+      setEdges(edgesToSet);
+      
+      // Store initial canvas data for comparison (deep copy)
+      initialCanvasDataRef.current = {
+        nodes: JSON.parse(JSON.stringify(nodesToSet)),
+        edges: JSON.parse(JSON.stringify(edgesToSet))
+      };
+      
       setIsInitialized(true);
       setIsLoading(false);
       coreNodeEnsuredRef.current = true;
@@ -157,6 +170,10 @@ export default function ProjectPage() {
       // Still set default nodes so user can see something
       setNodes(defaultNodes);
       setEdges(defaultEdges);
+      initialCanvasDataRef.current = {
+        nodes: JSON.parse(JSON.stringify(defaultNodes)),
+        edges: JSON.parse(JSON.stringify(defaultEdges))
+      };
       setIsInitialized(true);
       coreNodeEnsuredRef.current = true;
     }
@@ -171,6 +188,49 @@ export default function ProjectPage() {
     }
   }, [token, projectId, fetchProject]);
 
+  // Helper function to deep compare canvas data
+  const hasCanvasDataChanged = useCallback((currentNodes: any[], currentEdges: any[]): boolean => {
+    if (!initialCanvasDataRef.current) return true;
+    
+    const initial = initialCanvasDataRef.current;
+    
+    // Compare nodes (normalize for comparison - remove transient properties)
+    const normalizeNode = (node: any) => ({
+      id: node.id,
+      type: node.type,
+      position: node.position,
+      data: node.data,
+      draggable: node.draggable,
+      deletable: node.deletable
+    });
+    
+    const normalizedCurrentNodes = currentNodes.map(normalizeNode).sort((a, b) => a.id.localeCompare(b.id));
+    const normalizedInitialNodes = initial.nodes.map(normalizeNode).sort((a, b) => a.id.localeCompare(b.id));
+    
+    if (JSON.stringify(normalizedCurrentNodes) !== JSON.stringify(normalizedInitialNodes)) {
+      return true;
+    }
+    
+    // Compare edges
+    const normalizeEdge = (edge: any) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle,
+      targetHandle: edge.targetHandle,
+      type: edge.type
+    });
+    
+    const normalizedCurrentEdges = currentEdges.map(normalizeEdge).sort((a, b) => a.id.localeCompare(b.id));
+    const normalizedInitialEdges = initial.edges.map(normalizeEdge).sort((a, b) => a.id.localeCompare(b.id));
+    
+    if (JSON.stringify(normalizedCurrentEdges) !== JSON.stringify(normalizedInitialEdges)) {
+      return true;
+    }
+    
+    return false;
+  }, []);
+
   // Auto-save canvas data whenever nodes or edges change
   const saveCanvasData = useCallback(async () => {
     if (!token || !projectId || !isInitialized) return;
@@ -178,6 +238,11 @@ export default function ProjectPage() {
     try {
       // Ensure core node is present and locked before saving
       const nodesToSave = ensureCoreNode(nodes);
+      
+      // Only save if data has actually changed
+      if (!hasCanvasDataChanged(nodesToSave, edges)) {
+        return;
+      }
       
       await fetch(`${API_URL}/api/projects/${projectId}`, {
         method: "PATCH",
@@ -192,10 +257,16 @@ export default function ProjectPage() {
           },
         }),
       });
+      
+      // Update initial canvas data after successful save
+      initialCanvasDataRef.current = {
+        nodes: JSON.parse(JSON.stringify(nodesToSave)),
+        edges: JSON.parse(JSON.stringify(edges))
+      };
     } catch (error) {
       console.error("Error saving canvas data:", error);
     }
-  }, [token, projectId, nodes, edges, isInitialized]);
+  }, [token, projectId, nodes, edges, isInitialized, hasCanvasDataChanged]);
 
   // Debounced save function
   useEffect(() => {
