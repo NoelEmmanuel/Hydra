@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="sticky top-8 left-0 right-0 z-50 mx-auto w-11/12 max-w-6xl bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl px-8 py-3 shadow-lg">
+    <header className="sticky top-10 left-0 right-0 z-50 mx-auto w-11/12 max-w-6xl rounded-2xl px-8 py-1">
       <nav className="flex items-center gap-12 w-full">
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: '#341f4f' }}>
@@ -15,7 +15,6 @@ export default function Header() {
               width={40}
               height={40}
               className="object-contain p-0.5"
-              style={{ transform: 'rotate(-15deg)' }}
               unoptimized
             />
           </div>
@@ -24,30 +23,9 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 ml-auto">
-          <a
-            href="#features"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#how-it-works"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            How it Works
-          </a>
-          <a
-            href="#use-cases"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Use Cases
-          </a>
-        </div>
-
         <Link
           href="/auth"
-          className="px-6 py-2 text-white rounded-lg font-medium text-sm transition-colors flex-shrink-0"
+          className="px-6 py-2 text-white rounded-lg font-medium text-sm transition-colors flex-shrink-0 ml-[50rem]"
           style={{ backgroundColor: '#341f4f' }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a1840'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#341f4f'}

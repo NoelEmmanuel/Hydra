@@ -64,7 +64,6 @@ export default function Sidebar() {
               width={40}
               height={40}
               className="object-contain p-0.5"
-              style={{ transform: 'rotate(-15deg)' }}
               unoptimized
             />
           </div>

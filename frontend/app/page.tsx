@@ -1,278 +1,101 @@
 "use client";
 
 import Header from "@/components/Header";
-import { ArrowRight, Zap, Brain, Gauge, Database, Workflow, Shield } from "lucide-react";
+import Image from "next/image";
+import { Zap, Database, Workflow } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <div className="h-24" />
-
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <div className="text-center space-y-8">
-          <div className="inline-block">
-            <span className="px-4 py-2 rounded-full text-badge border" style={{ backgroundColor: '#f3eef7', color: '#341f4f', borderColor: '#a68bb8' }}>
-              Multi-Agent AI Platform
-            </span>
-          </div>
-
-          <h1 className="text-display">
-            From Natural Language to
-            <br />
-            <span className="text-black">
-              Deployed AI Agents
-            </span>
+      <section className="max-w-6xl mx-auto px-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground tracking-tight">
+            Build Multi-Agent AI Systems
           </h1>
-
-          <p className="text-subtitle max-w-2xl mx-auto">
-            Build sophisticated multi-agent reasoning systems powered by NVIDIA Nemotron
-            through an intuitive visual canvas. From concept to production in minutes, not days.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto py-2">
+              Connect agents, tools, and data sources through a visual canvas.
           </p>
+          <div className="">
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <button className="px-8 py-4 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 text-lg" style={{ backgroundColor: '#341f4f' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a1840'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#341f4f'}>
-              Launch Canvas
-              <ArrowRight className="w-5 h-5" />
-            </button>
-            <button className="px-8 py-4 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-muted transition-colors text-lg border border-border">
-              View Demo
-            </button>
           </div>
+          <span className="px-4 py-1 rounded-full text-badge border" style={{ backgroundColor: '#f3eef7', color: '#341f4f', borderColor: '#a68bb8' }}>
+              Powered by NVIDIA Nemotron
+            </span>
 
-          <p className="text-body-sm text-muted pt-8">
-            Powered by NVIDIA Nemotron • No coding required
-          </p>
+          <div className="pt-8 pb-8">
+            <div className="mx-auto max-w-4xl">
+              <div className="flex rounded-lg overflow-hidden items-stretch" style={{ border: '1px solid rgba(0, 0, 0, 0.15)' }}>
+                {/* Image Section */}
+                <div className="flex-[0.65] overflow-hidden relative" style={{ minHeight: '400px' }}>
+                  <Image
+                    src="/canvas.png"
+                    alt="Visual Canvas"
+                    width={1200}
+                    height={800}
+                    className="absolute inset-0 w-full h-full object-cover scale-150"
+                    style={{
+                      objectPosition: 'center'
+                    }}
+                    unoptimized
+                  />
+                </div>
+                
+                {/* Workflow Explanation Card */}
+                <div className="flex-[0.35] bg-white p-6 flex flex-col justify-center border-l shrink-0" style={{ borderColor: 'rgba(0, 0, 0, 0.15)' }}>
+                  <h3 className="text-lg font-semibold mb-3 text-foreground">
+                    Automated Incident Response System
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    This workflow automates <span className="font-semibold" style={{ color: '#341f4f' }}>incident detection and resolution</span>. The first agent monitors <span className="font-semibold" style={{ color: '#341f4f' }}>system logs from S3 storage</span>, 
+                    analyzes them for <span className="font-semibold" style={{ color: '#341f4f' }}>anomalies</span>, and sends real-time alerts to the team via <span className="font-semibold" style={{ color: '#341f4f' }}>Slack</span> when issues are detected. 
+                    The second agent automatically creates <span className="font-semibold" style={{ color: '#341f4f' }}>GitHub issues</span> to track incidents and manages the resolution process, 
+                    ensuring all incidents are properly documented and resolved.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <div className="text-center mb-16">
-          <h2 className="text-h1 mb-4">
-            Why HYDRA Wins
-          </h2>
-          <p className="text-subtitle max-w-2xl mx-auto">
-            Everything you need to build production-ready multi-agent systems
-          </p>
-        </div>
-
+      <section id="features" className="max-w-5xl mx-auto px-6 py-5 md:py-7">
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            {
-              icon: Brain,
-              title: "Model Fine-Tuning",
-              description:
-                "Automatically fine-tune Nemotron models on your domain-specific data from connected knowledge bases.",
-            },
             {
               icon: Workflow,
               title: "Visual Canvas",
               description:
-                "Intuitive drag-and-drop interface to design complex agentic workflows without writing code.",
+                "Design workflows through an intuitive drag-and-drop interface.",
             },
             {
               icon: Zap,
               title: "Multi-Agent Orchestration",
               description:
-                "Build teams of specialized agents that collaborate intelligently using the Core orchestrator.",
-            },
-            {
-              icon: Shield,
-              title: "Auto Deployment",
-              description:
-                "Automatically deploys trained systems to production with NVIDIA NIMs and Brev GPU infrastructure.",
-            },
-            {
-              icon: Gauge,
-              title: "Monitoring & Retraining",
-              description:
-                "Real-time performance monitoring with automatic retraining when thresholds are breached.",
+                "Build teams of specialized agents that work together.",
             },
             {
               icon: Database,
               title: "Knowledge Integration",
               description:
-                "Connect CSV files, S3 buckets, databases, and GitHub repositories for intelligent agent training.",
+                "Connect data sources including S3, databases, and GitHub repositories.",
             },
           ].map((feature, idx) => (
-            <div key={idx} className="p-8 rounded-lg border border-border transition-colors group" style={{ '--hover-border': '#a68bb8' } as React.CSSProperties} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#a68bb8'} onMouseLeave={(e) => e.currentTarget.style.borderColor = ''}>
-              <feature.icon className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#341f4f' }} />
-              <h3 className="text-h4 mb-3">
+            <div key={idx} className="p-6">
+              <feature.icon className="w-10 h-10 mb-3" style={{ color: '#341f4f' }} />
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 {feature.title}
               </h3>
-              <p className="text-body text-foreground">
+              <p className="text-sm text-muted-foreground">
                 {feature.description}
               </p>
             </div>
           ))}
         </div>
       </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <h2 className="text-h1 text-center mb-4">
-          The HYDRA Pipeline
-        </h2>
-        <p className="text-subtitle text-center max-w-2xl mx-auto mb-16">
-          Three intelligent meta-agents automate your entire ML lifecycle
-        </p>
-
-        <div className="space-y-8">
-          {[
-            {
-              num: "1",
-              title: "Agent Trainer",
-              description:
-                "Automatically fine-tunes all models on your domain data, binds them to tools, and validates performance before deployment.",
-              details: [
-                "NeMo fine-tuning",
-                "Tool binding",
-                "Performance validation",
-              ],
-            },
-            {
-              num: "2",
-              title: "Agent Deployer",
-              description:
-                "Intelligently deploys trained agents to NVIDIA NIMs with Brev GPU infrastructure and creates REST API endpoints.",
-              details: [
-                "NIM configuration",
-                "GPU provisioning",
-                "API endpoint generation",
-              ],
-            },
-            {
-              num: "3",
-              title: "Agent Monitor",
-              description:
-                "Continuously monitors performance, collects metrics, detects anomalies, and triggers automatic retraining when needed.",
-              details: ["Real-time metrics", "Alert management", "Auto-retraining"],
-            },
-          ].map((step, idx) => (
-            <div key={idx} className="flex gap-8 items-start">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center w-12 h-12 rounded-lg text-white font-bold text-lg" style={{ backgroundColor: '#341f4f' }}>
-                  {step.num}
-                </div>
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-h3 mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-body text-foreground mb-4">
-                  {step.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {step.details.map((detail, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 rounded-full text-sm border"
-                      style={{ backgroundColor: '#f3eef7', color: '#341f4f', borderColor: '#a68bb8' }}
-                    >
-                      {detail}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Use Cases Section */}
-      <section id="use-cases" className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <h2 className="text-h1 text-center mb-4">
-          Built for Real-World Problems
-        </h2>
-        <p className="text-subtitle text-center max-w-2xl mx-auto mb-16">
-          HYDRA excels at building sophisticated agentic AI patterns
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {[
-            {
-              title: "Multi-Agent Systems",
-              description:
-                "Build teams of specialized agents that collaborate. Example: Report Generator with Research, Outline, Writer, and Editor agents.",
-            },
-            {
-              title: "Agentic RAG",
-              description:
-                "Systems that intelligently decide when to retrieve information, perfect for domain-specific assistants with dynamic knowledge needs.",
-            },
-            {
-              title: "ReAct Pattern Workflows",
-              description:
-                "Agents that Reason → Act → Observe in loops. Example: Automated debugging, technical support systems.",
-            },
-            {
-              title: "Tool-Calling Applications",
-              description:
-                "Leverage Nemotron's exceptional ability to use external APIs. Example: Finance analysis, DevOps automation.",
-            },
-          ].map((useCase, idx) => (
-            <div
-              key={idx}
-              className="p-8 rounded-lg border border-border transition-all group hover:shadow-lg"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#a68bb8';
-                const title = e.currentTarget.querySelector('h3');
-                if (title) title.style.color = '#341f4f';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '';
-                const title = e.currentTarget.querySelector('h3');
-                if (title) title.style.color = '';
-              }}
-            >
-              <h3 className="text-h4 mb-3 transition-colors">
-                {useCase.title}
-              </h3>
-              <p className="text-body text-foreground">
-                {useCase.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <div className="rounded-2xl border p-12 md:p-16 text-center" style={{ background: 'linear-gradient(to right, #f9f9f9, #f3eef7, #f9f9f9)', borderColor: '#a68bb8' }}>
-          <h2 className="text-h1 mb-4">
-            Ready to Build?
-          </h2>
-          <p className="text-subtitle max-w-2xl mx-auto mb-8">
-            Transform your domain expertise into production-ready multi-agent AI systems.
-          </p>
-          <button className="px-8 py-4 text-white rounded-lg font-semibold transition-colors text-lg inline-flex items-center gap-2" style={{ backgroundColor: '#341f4f' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a1840'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#341f4f'}>
-            Launch Your First Project
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center text-foreground text-body-sm">
-            <div>© 2024 HYDRA. Powered by NVIDIA Nemotron.</div>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-foreground transition-colors" onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'} onMouseLeave={(e) => e.currentTarget.style.color = ''}>
-                Documentation
-              </a>
-              <a href="#" className="text-foreground transition-colors" onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'} onMouseLeave={(e) => e.currentTarget.style.color = ''}>
-                GitHub
-              </a>
-              <a href="#" className="text-foreground transition-colors" onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'} onMouseLeave={(e) => e.currentTarget.style.color = ''}>
-                Community
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
