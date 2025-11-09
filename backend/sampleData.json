@@ -15,16 +15,19 @@
     "knowledge_bases": [
         {
             "name": "Fraud Detection Knowledge Base",
+            "url": "https://s3.amazonaws.com/fraud-detection-knowledge-base.csv",
             "description": "A knowledge base to detect fraud",
             "id": 1
         },
         {
             "name": "Messenger Knowledge Base",
+            "url": "https://s3.amazonaws.com/messenger-knowledge-base.csv",
             "description": "A knowledge base to send alerts of fraud detection",
             "id": 2
         },
         {
             "name": "Contact Knowledge Base",
+            "url": "https://s3.amazonaws.com/contact-knowledge-base.csv",
             "description": "A knowledge base to store contact information",
             "id": 3
         }
