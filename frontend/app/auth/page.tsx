@@ -5,13 +5,56 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function AuthPage() {
   const [isSignIn, setIsSignIn] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    router.push("/home");
+    setIsLoading(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const fullName = formData.get("name") as string;
+
+    try {
+      const endpoint = isSignIn ? `${API_URL}/api/auth/signin` : `${API_URL}/api/auth/signup`;
+      const body = isSignIn 
+        ? { email, password }
+        : { email, password, full_name: fullName || null };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Authentication failed");
+      }
+
+      // Store token in localStorage
+      if (data.access_token) {
+        localStorage.setItem("auth_token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      // Redirect to home
+      router.push("/home");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,14 +133,7 @@ export default function AuthPage() {
               </div>
 
               {isSignIn && (
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-input text-green-600 focus:ring-green-600"
-                    />
-                    <span>Remember me</span>
-                  </label>
+                <div className="flex items-center justify-end">
                   <a href="#" className="text-sm text-green-600 hover:text-green-700 transition-colors">
                     Forgot password?
                   </a>
@@ -126,11 +162,18 @@ export default function AuthPage() {
                 </div>
               )}
 
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-green-600 text-white rounded-2xl font-semibold hover:bg-green-700 transition-colors text-base"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-green-600 text-white rounded-2xl font-semibold hover:bg-green-700 transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSignIn ? "Sign In" : "Create Account"}
+                {isLoading ? "Please wait..." : isSignIn ? "Sign In" : "Create Account"}
               </button>
             </form>
           </div>

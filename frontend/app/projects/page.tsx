@@ -27,18 +27,20 @@ export default function ProjectsPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50/50 flex items-center">
-        <div className="max-w-7xl mx-auto px-8 w-full">
-          {/* Search Bar */}
-          <div className="relative mb-8">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-            />
+      <main className="flex-1 overflow-y-auto bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-8 py-8">
+          {/* Search Bar - Sticky */}
+          <div className="sticky top-0 z-10 bg-gray-50/50 pb-8 mb-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+              />
+            </div>
           </div>
 
           {/* Projects Grid */}
