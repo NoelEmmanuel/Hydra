@@ -50,7 +50,7 @@ async def create_system(config: SystemConfig):
     try:
         config_dict = config.model_dump()
         system_id = system_manager.create_system(config_dict)
-        endpoint = f"/api/systems/{system_id}/chat"
+        endpoint = f"http://127.0.0.1:8000/api/systems/{system_id}/chat"
         
         return {
             "system_id": system_id,

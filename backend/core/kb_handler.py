@@ -13,17 +13,29 @@ def fetch_kb_content(s3_url: str) -> str:
     Fetch content from an S3 URL.
     
     Args:
-        s3_url: S3 URL to fetch from
+        s3_url: S3 URL to fetch from (HTTP/HTTPS URL)
     
     Returns:
         Raw content as string
     
     Raises:
         requests.HTTPError: If the request fails
+        ValueError: If URL format is invalid
     """
-    response = requests.get(s3_url)
-    response.raise_for_status()
-    return response.text
+    # Validate URL format
+    if not s3_url.startswith("http://") and not s3_url.startswith("https://"):
+        raise ValueError(f"Invalid URL format: {s3_url}. Must be a valid HTTP/HTTPS URL")
+    
+    print(f"DEBUG: Fetching KB content from: {s3_url}")
+    try:
+        response = requests.get(s3_url, timeout=30)
+        response.raise_for_status()
+        content = response.text
+        print(f"DEBUG: Successfully fetched {len(content)} characters from {s3_url}")
+        return content
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Failed to fetch KB content from {s3_url}: {e}")
+        raise
 
 
 def parse_json_content(content: str) -> str:
@@ -84,17 +96,42 @@ def get_kb_content(s3_url: str) -> str:
     """
     content = fetch_kb_content(s3_url)
     
+    if not content or not content.strip():
+        print(f"WARNING: Fetched content from {s3_url} is empty")
+        return "[Empty content]"
+    
     # Try to detect format by URL extension or content
     if s3_url.endswith('.json'):
-        return parse_json_content(content)
+        parsed = parse_json_content(content)
+        if not parsed or not parsed.strip():
+            print(f"WARNING: Parsed JSON content from {s3_url} is empty")
+            return content  # Return raw content if parsing results in empty
+        return parsed
     elif s3_url.endswith('.csv'):
-        return parse_csv_content(content)
+        parsed = parse_csv_content(content)
+        if not parsed or not parsed.strip():
+            print(f"WARNING: Parsed CSV content from {s3_url} is empty")
+            return content  # Return raw content if parsing results in empty
+        return parsed
     else:
         # Try JSON first, then CSV
         try:
-            return parse_json_content(content)
-        except:
-            return parse_csv_content(content)
+            parsed = parse_json_content(content)
+            if parsed and parsed.strip():
+                return parsed
+        except Exception as e:
+            print(f"DEBUG: JSON parsing failed for {s3_url}: {e}")
+        
+        try:
+            parsed = parse_csv_content(content)
+            if parsed and parsed.strip():
+                return parsed
+        except Exception as e:
+            print(f"DEBUG: CSV parsing failed for {s3_url}: {e}")
+        
+        # If both parsing attempts fail or return empty, return raw content
+        print(f"WARNING: Both JSON and CSV parsing failed or returned empty for {s3_url}, returning raw content")
+        return content
 
 
 def format_kbs_for_prompt(knowledge_bases: List[Dict[str, Any]]) -> str:
@@ -110,32 +147,64 @@ def format_kbs_for_prompt(knowledge_bases: List[Dict[str, Any]]) -> str:
     """
     kb_sections = []
     
+    if not knowledge_bases:
+        print("DEBUG: format_kbs_for_prompt called with empty knowledge_bases list")
+        return ""
+    
+    print(f"DEBUG: format_kbs_for_prompt processing {len(knowledge_bases)} KB(s)")
+    
     for kb in knowledge_bases:
         kb_id = kb.get('id')
         kb_name = kb.get('name', 'Unknown')
         kb_description = kb.get('description', '')
         kb_url = kb.get('url') or kb.get('s3_url')  # Support both 'url' and 's3_url'
         
+        print(f"DEBUG: Processing KB {kb_id} ({kb_name}), URL: {kb_url}")
+        
         if not kb_url:
+            print(f"WARNING: KB {kb_id} ({kb_name}) has no URL, skipping")
             continue
         
         try:
+            print(f"DEBUG: Fetching KB content from {kb_url}")
             kb_content = get_kb_content(kb_url)
-            kb_section = f"""
-Knowledge Base {kb_id}: {kb_name}
+            print(f"DEBUG: Successfully fetched KB content, length: {len(kb_content)} chars")
+            
+            if not kb_content or not kb_content.strip():
+                print(f"WARNING: KB {kb_id} content is empty after fetch")
+                kb_section = f"""
+=== KNOWLEDGE BASE {kb_id}: {kb_name} ===
 Description: {kb_description}
-Content:
+Source URL: {kb_url}
+STATUS: Content is empty or could not be parsed from the URL above.
+---
+"""
+            else:
+                # Format KB content clearly - make it obvious this is the actual data
+                kb_section = f"""
+=== KNOWLEDGE BASE {kb_id}: {kb_name} ===
+Description: {kb_description}
+Source URL: {kb_url}
+
+ACTUAL DATA CONTENT (already loaded, use this directly):
 {kb_content}
+
+END OF KNOWLEDGE BASE {kb_id} CONTENT
+---
 """
             kb_sections.append(kb_section)
         except Exception as e:
             # If fetching fails, include description only
+            print(f"ERROR: Failed to fetch KB {kb_id} ({kb_name}) from {kb_url}: {str(e)}")
             kb_section = f"""
 Knowledge Base {kb_id}: {kb_name}
 Description: {kb_description}
+S3 URL: {kb_url}
 (Content unavailable: {str(e)})
 """
             kb_sections.append(kb_section)
     
-    return "\n".join(kb_sections)
+    result = "\n".join(kb_sections)
+    print(f"DEBUG: format_kbs_for_prompt returning {len(result)} chars")
+    return result
 

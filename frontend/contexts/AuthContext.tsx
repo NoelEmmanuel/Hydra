@@ -33,13 +33,13 @@ function getTokenExpiration(token: string): number | null {
   }
 }
 
-// Helper function to check if token is expired or will expire soon (within 5 minutes)
+// Helper function to check if token is expired or will expire soon (within 10 minutes)
 function isTokenExpiringSoon(token: string): boolean {
   const expiration = getTokenExpiration(token);
   if (!expiration) return true;
   const now = Date.now();
-  const fiveMinutes = 5 * 60 * 1000;
-  return expiration - now < fiveMinutes;
+  const tenMinutes = 10 * 60 * 1000;
+  return expiration - now < tenMinutes;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -150,13 +150,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearInterval(refreshIntervalRef.current);
     }
 
-    // Check token every 4 minutes (tokens expire in 1 hour, refresh 5 min before)
+    // Check token every 5 minutes (tokens expire in 1 hour, refresh 10 min before)
     refreshIntervalRef.current = setInterval(async () => {
       const storedToken = localStorage.getItem("auth_token");
       if (storedToken && isTokenExpiringSoon(storedToken)) {
         await refreshToken();
       }
-    }, 4 * 60 * 1000); // Check every 4 minutes
+    }, 5 * 60 * 1000); // Check every 5 minutes
   }, [refreshToken]);
 
   // Initialize auth state from localStorage
@@ -195,6 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    // If we have a valid token that's not expiring soon, consider authenticated
+    // This prevents logout on temporary network issues
+    const expiration = getTokenExpiration(validToken);
+    const now = Date.now();
+    const isTokenValid = expiration && expiration > now + (5 * 60 * 1000); // Valid for at least 5 more minutes
+    
     try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
@@ -203,24 +209,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        // Try refreshing token once more
-        const refreshed = await refreshToken();
-        if (!refreshed) {
-          throw new Error("Invalid token");
+        // Only try refreshing if it's a 401 (unauthorized), not other errors
+        if (response.status === 401) {
+          const refreshed = await refreshToken();
+          if (!refreshed) {
+            // Refresh failed, clear auth state
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("user");
+            setToken(null);
+            setUser(null);
+            stopTokenRefresh();
+            return false;
+          }
+          // Retry with new token
+          const newToken = localStorage.getItem("auth_token");
+          if (!newToken) {
+            return false;
+          }
+          const retryResponse = await fetch(`${API_URL}/api/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+          if (!retryResponse.ok) {
+            // Still failing after refresh, clear auth state
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("user");
+            setToken(null);
+            setUser(null);
+            stopTokenRefresh();
+            return false;
+          }
+          const userData = await retryResponse.json();
+          setUser(userData);
+          setToken(newToken);
+          return true;
+        } else {
+          // Other errors (network, server errors) - if token is still valid, keep user logged in
+          if (isTokenValid) {
+            // Token is still valid, just the request failed - keep user authenticated
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                setUser(JSON.parse(storedUser));
+                setToken(validToken);
+                return true;
+              } catch (e) {
+                // Invalid user data, but token is valid
+                return true;
+              }
+            }
+            return true;
+          }
+          console.error("Auth check failed with status:", response.status);
+          return false;
         }
-        // Retry with new token
-        const retryResponse = await fetch(`${API_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        });
-        if (!retryResponse.ok) {
-          throw new Error("Invalid token");
-        }
-        const userData = await retryResponse.json();
-        setUser(userData);
-        setToken(localStorage.getItem("auth_token"));
-        return true;
       }
 
       const userData = await response.json();
@@ -228,13 +273,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(validToken);
       return true;
     } catch (error) {
-      // Token is invalid, clear auth state
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
-      setToken(null);
-      setUser(null);
-      stopTokenRefresh();
+      // Network errors or other exceptions - if token is still valid, keep user logged in
+      if (isTokenValid) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+            setToken(validToken);
+            return true;
+          } catch (e) {
+            // Invalid user data, but token is valid
+            return true;
+          }
+        }
+        return true;
+      }
+      console.error("Auth check error:", error);
       return false;
     }
   }, [getValidToken, refreshToken, stopTokenRefresh]);

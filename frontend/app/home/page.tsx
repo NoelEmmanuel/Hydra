@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
@@ -11,39 +12,117 @@ import {
   Clock,
 } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// API Calls graph data - peak at 9
 const apiCallsData = [
-  { time: "00:00", calls: 45 },
-  { time: "04:00", calls: 120 },
-  { time: "08:00", calls: 320 },
-  { time: "12:00", calls: 450 },
-  { time: "16:00", calls: 380 },
-  { time: "20:00", calls: 280 },
+  { time: "00:00", calls: 2 },
+  { time: "04:00", calls: 1 },
+  { time: "08:00", calls: 5 },
+  { time: "12:00", calls: 9 },
+  { time: "16:00", calls: 7 },
+  { time: "20:00", calls: 4 },
 ];
 
+// Success Rate graph data - ~100% with 1-2 dots slightly lower
 const successRateData = [
-  { day: "Mon", rate: 98.2 },
-  { day: "Tue", rate: 98.5 },
-  { day: "Wed", rate: 98.8 },
-  { day: "Thu", rate: 98.3 },
-  { day: "Fri", rate: 98.6 },
-  { day: "Sat", rate: 98.4 },
-  { day: "Sun", rate: 98.5 },
+  { day: "Mon", rate: 100 },
+  { day: "Tue", rate: 100 },
+  { day: "Wed", rate: 99.8 },
+  { day: "Thu", rate: 100 },
+  { day: "Fri", rate: 100 },
+  { day: "Sat", rate: 99.9 },
+  { day: "Sun", rate: 100 },
 ];
 
-const deploymentData = [
-  { name: "Deployed", value: 12 },
-  { name: "Draft", value: 8 },
-  { name: "Archived", value: 4 },
-];
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+  if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+  if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+  
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 4) return `${diffWeeks} ${diffWeeks === 1 ? 'week' : 'weeks'} ago`;
+  
+  const diffMonths = Math.floor(diffDays / 30);
+  return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`;
+}
 
 export default function HomePage() {
-  const recentProjects = [
-    { name: "Customer Support Agent", status: "deployed", lastModified: "2 hours ago" },
-    { name: "Data Analysis Pipeline", status: "deployed", lastModified: "1 day ago" },
-    { name: "Content Generator", status: "draft", lastModified: "3 days ago" },
-    { name: "E-commerce Assistant", status: "deployed", lastModified: "5 days ago" },
-  ];
+  const { getValidToken } = useAuth();
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [activeDeployments, setActiveDeployments] = useState(0);
+  const [apiCallsToday, setApiCallsToday] = useState(42);
+  const [recentProjects, setRecentProjects] = useState<Array<{ id: string; name: string; status: string; lastModified: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+    fetchRecentProjects();
+  }, []);
+
+  const fetchStats = async () => {
+    const token = await getValidToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTotalProjects(data.total_projects);
+        setActiveDeployments(data.active_deployments);
+        setApiCallsToday(data.api_calls_today);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRecentProjects = async () => {
+    const token = await getValidToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/projects`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const projects = await response.json();
+        // Get the 4 most recently updated projects
+        const recent = projects
+          .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+          .slice(0, 4)
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            status: p.status,
+            lastModified: formatRelativeTime(p.updated_at),
+          }));
+        setRecentProjects(recent);
+      }
+    } catch (error) {
+      console.error("Error fetching recent projects:", error);
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -61,8 +140,8 @@ export default function HomePage() {
                   <FolderKanban className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
-              <div className="text-4xl font-bold text-foreground mb-2">24</div>
-              <div className="text-sm text-muted-foreground">+3 from yesterday</div>
+              <div className="text-4xl font-bold text-foreground mb-2">{isLoading ? "..." : totalProjects}</div>
+              <div className="text-sm text-muted-foreground">Total projects created</div>
             </div>
 
             {/* Active Deployments Card */}
@@ -73,7 +152,7 @@ export default function HomePage() {
                   <Rocket className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
-              <div className="text-4xl font-bold text-foreground mb-2">12</div>
+              <div className="text-4xl font-bold text-foreground mb-2">{isLoading ? "..." : activeDeployments}</div>
               <div className="text-sm text-muted-foreground">All systems operational</div>
             </div>
 
@@ -85,8 +164,8 @@ export default function HomePage() {
                   <Activity className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
-              <div className="text-4xl font-bold text-foreground mb-2">1.2K</div>
-              <div className="text-sm text-muted-foreground">+15% from yesterday</div>
+              <div className="text-4xl font-bold text-foreground mb-2">{isLoading ? "..." : apiCallsToday}</div>
+              <div className="text-sm text-muted-foreground">API calls today</div>
             </div>
           </div>
 
@@ -108,7 +187,7 @@ export default function HomePage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" stroke="#888" fontSize={12} />
-                  <YAxis stroke="#888" fontSize={12} />
+                  <YAxis domain={[0, 10]} stroke="#888" fontSize={12} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'white', 
@@ -139,7 +218,7 @@ export default function HomePage() {
                 <LineChart data={successRateData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="day" stroke="#888" fontSize={12} />
-                  <YAxis domain={[97, 100]} stroke="#888" fontSize={12} />
+                  <YAxis domain={[99, 100]} stroke="#888" fontSize={12} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'white', 
@@ -170,33 +249,41 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-4 gap-4">
-              {recentProjects.map((project, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-4 border border-border hover:border-gray-300 transition-colors cursor-pointer group">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 
-                      className="font-medium text-foreground text-sm transition-colors"
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = ''}
-                    >
-                      {project.name}
-                    </h3>
-                    <span 
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        project.status === "deployed" 
-                          ? "text-white"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
-                      style={project.status === "deployed" ? { backgroundColor: '#341f4f' } : {}}
-                    >
-                      {project.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {project.lastModified}
-                  </div>
+              {recentProjects.length > 0 ? (
+                recentProjects.map((project) => (
+                  <Link key={project.id} href={`/projects/${project.id}`}>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-border hover:border-gray-300 transition-colors cursor-pointer group">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 
+                          className="font-medium text-foreground text-sm transition-colors"
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                        >
+                          {project.name}
+                        </h3>
+                        <span 
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            project.status === "deployed" 
+                              ? "text-white"
+                              : "bg-gray-200 text-gray-700"
+                          }`}
+                          style={project.status === "deployed" ? { backgroundColor: '#341f4f' } : {}}
+                        >
+                          {project.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {project.lastModified}
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-4 text-center text-muted-foreground py-8">
+                  {isLoading ? "Loading..." : "No projects yet. Create your first project!"}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

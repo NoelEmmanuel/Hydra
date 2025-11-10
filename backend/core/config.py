@@ -4,23 +4,29 @@ Configuration module for loading environment variables and constructing BASE_URL
 import os
 from dotenv import load_dotenv
 
-# Hardcoded path to .env file
-ENV_FILE_PATH = r"C:\Users\ramgu\OneDrive\Desktop\Hydra\backend\.env"
+# Path to .env file - use relative path from this file's location
+import pathlib
+ENV_FILE_PATH = pathlib.Path(__file__).parent.parent / ".env"
 
 # Load environment variables with error handling
+# First try to load from explicit path, then fall back to default behavior
 try:
     result = load_dotenv(ENV_FILE_PATH)
     if not result:
-        print(f"Warning: .env file not found or empty at {ENV_FILE_PATH}")
+        # Fall back to default .env loading behavior (current directory)
+        load_dotenv()
 except Exception as e:
     print(f"Error loading .env file: {e}")
+    # Fall back to default .env loading behavior
+    load_dotenv()
 
 # Load endpoint values from environment variables
 # These can be full URLs or IP addresses/hostnames
 # The URL format will be: http://{endpoint}:8000/v1
-ENDPOINT_CORE = os.getenv("ENDPOINT_CORE", "154.54.100.00") # Default is broken for them all intentionally.
-ENDPOINT_EVEN = os.getenv("ENDPOINT_EVEN", "154.54.100.00")
-ENDPOINT_ODD = os.getenv("ENDPOINT_ODD", "154.54.100.00")
+# These must be set via environment variables
+ENDPOINT_CORE = os.getenv("ENDPOINT_CORE", "")
+ENDPOINT_EVEN = os.getenv("ENDPOINT_EVEN", "")
+ENDPOINT_ODD = os.getenv("ENDPOINT_ODD", "")
 
 # Debug: Print loaded values (remove in production)
 if os.getenv("DEBUG_ENDPOINTS", "false").lower() == "true":
@@ -48,8 +54,8 @@ def get_base_url(endpoint: str) -> str:
     
     Args:
         endpoint: The endpoint value - can be:
-            - Full URL: "http://154.54.100.76:8000/v1"
-            - IP/hostname: "154.54.100.76"
+            - Full URL: "http://example.com:8000/v1"
+            - IP/hostname: "example.com"
     
     Returns:
         BASE_URL in format: http://{endpoint}:8000/v1
@@ -61,6 +67,10 @@ def get_base_url(endpoint: str) -> str:
     # Check if endpoint is already a full URL
     if endpoint.startswith("http://") or endpoint.startswith("https://"):
         return endpoint
+    
+    # Validate endpoint is not empty
+    if not endpoint:
+        raise ValueError("Endpoint must be set via environment variable")
     
     # Otherwise, construct the URL from IP/hostname
     return f"http://{endpoint}:8000/v1"

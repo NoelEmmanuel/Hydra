@@ -79,19 +79,70 @@ class Router:
         model_kbs = self._get_kbs_for_model(model)
         model_tools = self._get_tools_for_model(model)
         
+        # Debug: Log model KB connections
+        print(f"DEBUG: Model {model_id} ({model.get('name', 'Unknown')}) has KB IDs: {model.get('knowledge_bases', [])}")
+        print(f"DEBUG: Found {len(model_kbs)} KB(s) for model {model_id}: {[kb.get('name', 'Unknown') for kb in model_kbs]}")
+        print(f"DEBUG: Available KBs in router: {[(kb.get('id'), kb.get('name', 'Unknown')) for kb in self.knowledge_bases]}")
+        
         # Fetch KB content (on each query)
         kb_content = format_kbs_for_prompt(model_kbs)
+        
+        # Debug: Log if KB content is empty (for troubleshooting)
+        if model_kbs and not kb_content.strip():
+            print(f"WARNING: Model {model_id} has {len(model_kbs)} KB(s) but KB content is empty. KBs: {[kb.get('name', 'Unknown') for kb in model_kbs]}")
+            print(f"DEBUG: KB details: {[(kb.get('id'), kb.get('name'), kb.get('url')) for kb in model_kbs]}")
         
         # Format tools for MCP
         tool_content = format_tools_for_prompt(model_tools)
         
         # Build system prompt
-        system_prompt = f"""You are a specialized AI agent with access to the following knowledge bases and tools.
+        kb_instruction = ""
+        if kb_content.strip():
+            kb_instruction = f"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    KNOWLEDGE BASES - DATA ALREADY LOADED                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-Knowledge Bases:
+IMPORTANT: The following data has been FETCHED FROM S3 and is ALREADY IN YOUR CONTEXT.
+You can use this data DIRECTLY - NO TOOLS ARE NEEDED. The data is RIGHT BELOW.
+
 {kb_content}
 
-Available Tools:
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         CRITICAL INSTRUCTIONS                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+When the user asks about:
+- "S3 data" or "connected S3" → Use the data shown above
+- "output the data from S3" → Copy and display the data shown above  
+- "knowledge base data" → Use the data shown above
+
+DO THIS:
+✓ Read the "ACTUAL DATA CONTENT" sections above
+✓ Copy that content and provide it to the user
+✓ The data is already loaded - you can see it above
+
+DO NOT DO THIS:
+✗ Do NOT say you need a tool to access S3
+✗ Do NOT say the data is unavailable
+✗ Do NOT mention "connection adapters" or "missing tools"
+✗ The data is RIGHT ABOVE - just use it!
+
+EXAMPLE RESPONSE:
+User: "Output the data from the connected S3"
+You: "Here is the data from the connected S3 knowledge base:
+
+[Copy the content from the "ACTUAL DATA CONTENT" section above]"
+
+"""
+        else:
+            kb_instruction = "\nNote: No knowledge bases are connected to this model.\n"
+        
+        system_prompt = f"""You are a specialized AI agent with access to knowledge bases and tools.
+
+{kb_instruction}
+
+=== AVAILABLE TOOLS ===
 {tool_content}
 
 You can use tools by requesting them through MCP (Model Context Protocol) capabilities. When you need to use a tool, you MUST respond with a JSON object in this exact format:
@@ -102,9 +153,18 @@ You can use tools by requesting them through MCP (Model Context Protocol) capabi
   <other_required_parameters>
 }}
 
-For example, to use the Jira tool (tool_id 1) to create an issue:
+For example, to use the GitHub tool (tool_id 1) to read a file:
 {{
   "tool_id": 1,
+  "action": "get_file_contents",
+  "owner": "username",
+  "repo": "repository-name",
+  "path": "path/to/file.txt"
+}}
+
+For example, to use the Jira tool (tool_id 2) to create an issue:
+{{
+  "tool_id": 2,
   "action": "create_issue",
   "project_key": "PROJ",
   "summary": "Issue title",
@@ -112,7 +172,17 @@ For example, to use the Jira tool (tool_id 1) to create an issue:
   "description": "Optional description"
 }}
 
+IMPORTANT REMINDERS: 
+- When you need to read a file from GitHub, you MUST use the GitHub tool with the correct owner, repo, and path parameters. Do not say you cannot access files - use the tool instead.
+- When asked about "S3 data", "connected S3", "knowledge base data", or "output data from S3", you MUST use the knowledge base content shown in the "KNOWLEDGE BASES (ALREADY LOADED FROM S3)" section above. The data is already loaded and available - you do NOT need any tool to retrieve it. Simply read and output the content from the knowledge bases section.
+
 Your task: {prompt}"""
+        
+        # Debug: Log system prompt length and KB content presence
+        print(f"DEBUG: System prompt length: {len(system_prompt)} chars")
+        print(f"DEBUG: KB content in prompt: {'YES' if kb_content.strip() in system_prompt else 'NO'}")
+        if kb_content.strip():
+            print(f"DEBUG: KB content preview (first 200 chars): {kb_content[:200]}")
         
         # Call sub-agent LLM and handle tool calls iteratively
         current_prompt = prompt
@@ -126,6 +196,8 @@ Your task: {prompt}"""
                 system_prompt=system_prompt,
                 max_tokens=2048  # Increased for tool call responses
             )
+            
+            print(f"DEBUG: LLM response (iteration {iteration + 1}): {response[:200]}...")
             
             # Check if response contains a tool call
             tool_call = self._parse_tool_call_from_response(response)

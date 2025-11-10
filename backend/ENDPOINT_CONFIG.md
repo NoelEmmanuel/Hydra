@@ -5,15 +5,15 @@
 Your `backend/.env` file should contain:
 
 ```env
-ENDPOINT_CORE=154.54.100.76
-ENDPOINT_EVEN=154.54.100.76
-ENDPOINT_ODD=154.54.100.76
-API_KEY=dummy-key
+ENDPOINT_CORE=your-endpoint-ip-or-hostname
+ENDPOINT_EVEN=your-endpoint-ip-or-hostname
+ENDPOINT_ODD=your-endpoint-ip-or-hostname
+API_KEY=your-api-key
 MODEL_NAME=nvidia/NVIDIA-Nemotron-Nano-9B-v2
 DEFAULT_MAX_TOKENS=256
 ```
 
-**Note:** Replace `154.54.100.76` with your actual endpoint IP addresses/hostnames if they differ.
+**Note:** Replace the placeholder values with your actual endpoint IP addresses/hostnames and API key.
 
 ## How Endpoints Are Used
 
@@ -25,11 +25,13 @@ Endpoints are now configured and used as plain hostnames or IP addresses. There 
 
 ## Code Structure Example
 
-Your client code now directly receives the endpoint value, e.g., `"154.54.100.76"` from the environment variable:
+Your client code now directly receives the endpoint value from the environment variable:
 
 ```python
 # Get the endpoint value (just the IP or hostname)
-endpoint = os.getenv("ENDPOINT_CORE", "154.54.100.00")
+endpoint = os.getenv("ENDPOINT_CORE", "")
+if not endpoint:
+    raise ValueError("ENDPOINT_CORE must be set")
 # Use as needed (e.g., pass into another function or build your URL elsewhere)
 ```
 

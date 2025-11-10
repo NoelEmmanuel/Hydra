@@ -303,6 +303,7 @@ export default function NodeSideMenu({ selectedNode, setNodes, setSelectedNode }
                   <SelectItem value="gmail">Gmail</SelectItem>
                   <SelectItem value="slack">Slack</SelectItem>
                   <SelectItem value="github">GitHub</SelectItem>
+                  <SelectItem value="jira">Jira</SelectItem>
                   <SelectItem value="google-drive">Google Drive</SelectItem>
                 </SelectContent>
               </Select>

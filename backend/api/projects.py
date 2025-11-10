@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from trainer_head.config import supabase
+from .config import supabase
+from .canvas_converter import convert_canvas_to_system_config
+from core.api.systems import system_manager
 from datetime import datetime
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -19,6 +21,7 @@ class ProjectUpdate(BaseModel):
     status: Optional[str] = None
     canvas_data: Optional[Dict[str, Any]] = None
     endpoint: Optional[str] = None
+    system_id: Optional[str] = None
 
 class ProjectResponse(BaseModel):
     id: str
@@ -28,6 +31,7 @@ class ProjectResponse(BaseModel):
     status: str
     canvas_data: Optional[Dict[str, Any]] = None
     endpoint: Optional[str] = None
+    system_id: Optional[str] = None
     created_at: str
     updated_at: str
 
@@ -39,6 +43,8 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(secu
         if user_response.user is None:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -102,10 +108,13 @@ async def get_project(
 ):
     """Get a specific project"""
     try:
-        response = supabase.table("projects").select("*").eq("id", project_id).eq("user_id", user_id).single().execute()
-        if not response.data:
+        # Use regular query instead of .single() to avoid PGRST116 error
+        response = supabase.table("projects").select("*").eq("id", project_id).eq("user_id", user_id).execute()
+        
+        if not response.data or len(response.data) == 0:
             raise HTTPException(status_code=404, detail="Project not found")
-        return ProjectResponse(**response.data)
+        
+        return ProjectResponse(**response.data[0])
     except HTTPException:
         raise
     except Exception as e:
@@ -119,9 +128,10 @@ async def update_project(
 ):
     """Update a project"""
     try:
-        # Verify project belongs to user
-        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).single().execute()
-        if not check_response.data:
+        # Verify project belongs to user (use regular query instead of .single() to avoid PGRST116)
+        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).execute()
+        
+        if not check_response.data or len(check_response.data) == 0:
             raise HTTPException(status_code=404, detail="Project not found")
         
         # Build update dict
@@ -136,12 +146,14 @@ async def update_project(
             update_data["canvas_data"] = project_update.canvas_data
         if project_update.endpoint is not None:
             update_data["endpoint"] = project_update.endpoint
+        if project_update.system_id is not None:
+            update_data["system_id"] = project_update.system_id
         
-        # Update project
-        response = supabase.table("projects").update(update_data).eq("id", project_id).execute()
+        # Update project (include user_id filter for RLS compliance)
+        response = supabase.table("projects").update(update_data).eq("id", project_id).eq("user_id", user_id).execute()
         
         if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=400, detail="Failed to update project")
+            raise HTTPException(status_code=400, detail="Failed to update project: Project may have been deleted or you don't have permission")
         
         return ProjectResponse(**response.data[0])
     except HTTPException:
@@ -154,26 +166,54 @@ async def deploy_project(
     project_id: str,
     user_id: str = Depends(get_current_user_id)
 ):
-    """Deploy a project and generate an API endpoint"""
+    """Deploy a project and create a multi-agent system"""
     try:
-        # Verify project belongs to user
-        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).single().execute()
-        if not check_response.data:
-            raise HTTPException(status_code=404, detail="Project not found")
+        # Get full project with canvas_data (use regular query instead of .single() to avoid PGRST116)
+        project_response = supabase.table("projects").select("*").eq("id", project_id).eq("user_id", user_id).execute()
         
-        # Generate dummy endpoint URL
-        endpoint = f"https://api.hydra.ai/v1/projects/{project_id}"
+        if not project_response.data or len(project_response.data) == 0:
+            raise HTTPException(status_code=404, detail="Project not found or you don't have permission to access it")
         
-        # Update project with endpoint and set status to deployed
-        response = supabase.table("projects").update({
+        project = project_response.data[0]
+        
+        # Validate canvas_data exists
+        canvas_data = project.get("canvas_data")
+        if not canvas_data:
+            raise HTTPException(status_code=400, detail="Project must have canvas_data to deploy")
+        
+        # Validate canvas_data has nodes
+        nodes = canvas_data.get("nodes", [])
+        if not nodes or not isinstance(nodes, list):
+            raise HTTPException(status_code=400, detail="Canvas data must contain nodes")
+        
+        # Convert canvas_data to SystemConfig
+        try:
+            system_config = convert_canvas_to_system_config(canvas_data)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid canvas configuration: {str(e)}")
+        
+        # Create the multi-agent system
+        try:
+            system_id = system_manager.create_system(system_config)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Failed to create system: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to create system: {str(e)}")
+        
+        # Generate endpoint URL with full URL
+        endpoint = f"http://127.0.0.1:8000/api/systems/{system_id}/chat"
+        
+        # Update project with system_id, endpoint, and set status to deployed
+        update_response = supabase.table("projects").update({
+            "system_id": system_id,
             "endpoint": endpoint,
             "status": "deployed"
-        }).eq("id", project_id).execute()
+        }).eq("id", project_id).eq("user_id", user_id).execute()
         
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=400, detail="Failed to deploy project")
+        if not update_response.data or len(update_response.data) == 0:
+            raise HTTPException(status_code=400, detail="Failed to update project: Project may have been deleted or you don't have permission")
         
-        return ProjectResponse(**response.data[0])
+        return ProjectResponse(**update_response.data[0])
     except HTTPException:
         raise
     except Exception as e:
@@ -186,16 +226,41 @@ async def delete_project(
 ):
     """Delete a project"""
     try:
-        # Verify project belongs to user
-        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).single().execute()
-        if not check_response.data:
+        # Verify project belongs to user (use regular query instead of .single() to avoid PGRST116)
+        check_response = supabase.table("projects").select("id").eq("id", project_id).eq("user_id", user_id).execute()
+        if not check_response.data or len(check_response.data) == 0:
             raise HTTPException(status_code=404, detail="Project not found")
         
-        # Delete project
-        supabase.table("projects").delete().eq("id", project_id).execute()
+        # Delete project (include user_id filter for RLS compliance)
+        # Wrap in try-except to handle Supabase exceptions
+        try:
+            delete_response = supabase.table("projects").delete().eq("id", project_id).eq("user_id", user_id).execute()
+            
+            # Check if deletion succeeded by verifying deleted rows
+            if not delete_response.data or len(delete_response.data) == 0:
+                raise HTTPException(status_code=400, detail="Failed to delete project: No rows were deleted")
+        except Exception as delete_error:
+            # Handle Supabase errors (like PGRST116 when 0 rows returned)
+            error_str = str(delete_error)
+            error_dict = delete_error.__dict__ if hasattr(delete_error, '__dict__') else {}
+            
+            # Check for PGRST116 error (0 rows)
+            if "PGRST116" in error_str or (isinstance(error_dict, dict) and error_dict.get("code") == "PGRST116"):
+                raise HTTPException(status_code=400, detail="Failed to delete project: Project not found or already deleted")
+            
+            # Re-raise if it's an HTTPException
+            if isinstance(delete_error, HTTPException):
+                raise
+            
+            # Otherwise, wrap in HTTPException
+            raise HTTPException(status_code=400, detail=f"Failed to delete project: {error_str}")
+        
         return {"message": "Project deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to delete project: {str(e)}")
+        error_msg = str(e)
+        # Log the full error for debugging
+        print(f"Delete project error: {error_msg}")
+        raise HTTPException(status_code=400, detail=f"Failed to delete project: {error_msg}")
 

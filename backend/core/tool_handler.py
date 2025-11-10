@@ -179,6 +179,32 @@ def format_tools_for_prompt(tools: List[Dict[str, Any]]) -> str:
         
         mcp_tool = format_tool_for_mcp(tool)
         
+        # Add specific usage instructions for GitHub tools
+        usage_instructions = ""
+        if is_github_tool(tool):
+            usage_instructions = """
+Usage Example: To read a file from GitHub, use:
+{
+  "tool_id": """ + str(tool_id) + """,
+  "action": "get_file_contents",
+  "owner": "repository-owner-username",
+  "repo": "repository-name",
+  "path": "path/to/file.ext"
+}
+"""
+        elif is_jira_tool(tool):
+            usage_instructions = """
+Usage Example: To create a Jira issue, use:
+{
+  "tool_id": """ + str(tool_id) + """,
+  "action": "create_issue",
+  "project_key": "PROJ",
+  "summary": "Issue title",
+  "issuetype": "Task",
+  "description": "Optional description"
+}
+"""
+        
         tool_section = f"""
 Tool {tool_id}: {tool_name}
 Description: {tool_description}
@@ -186,6 +212,7 @@ API URL: {api_url}
 MCP Capability: Available
 You can call this tool using the MCP protocol with the following schema:
 {json.dumps(mcp_tool['inputSchema'], indent=2)}
+{usage_instructions}
 """
         tool_sections.append(tool_section)
     
