@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
 import {
   FolderKanban,
@@ -8,7 +9,6 @@ import {
   Activity,
   TrendingUp,
   Clock,
-  Plus,
 } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -46,38 +46,31 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50/50 flex items-center">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-white overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 flex items-center">
         <div className="max-w-7xl mx-auto px-8 w-full">
-          {/* Header with Create Button */}
-          <div className="flex items-center justify-start mb-8">
-            <button className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm text-sm">
-              <Plus className="w-4 h-4" />
-              Create New Project
-            </button>
-          </div>
-
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-6 mb-8">
             {/* Total Projects Card */}
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">Total Projects</span>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FolderKanban className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <FolderKanban className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">24</div>
-              <div className="text-sm text-muted-foreground">+3 from last month</div>
+              <div className="text-sm text-muted-foreground">+3 from yesterday</div>
             </div>
 
             {/* Active Deployments Card */}
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">Active Deployments</span>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Rocket className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <Rocket className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">12</div>
@@ -88,8 +81,8 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-muted-foreground">API Calls Today</span>
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f3eef7' }}>
+                  <Activity className="w-5 h-5" style={{ color: '#341f4f' }} />
                 </div>
               </div>
               <div className="text-4xl font-bold text-foreground mb-2">1.2K</div>
@@ -140,7 +133,7 @@ export default function HomePage() {
             <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-foreground">Success Rate</h3>
-                <TrendingUp className="w-5 h-5 text-green-600" />
+                <TrendingUp className="w-5 h-5" style={{ color: '#341f4f' }} />
               </div>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={successRateData}>
@@ -158,9 +151,9 @@ export default function HomePage() {
                   <Line 
                     type="monotone" 
                     dataKey="rate" 
-                    stroke="#22c55e" 
+                    stroke="#341f4f" 
                     strokeWidth={3}
-                    dot={{ fill: '#22c55e', r: 4 }}
+                    dot={{ fill: '#341f4f', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>
@@ -180,12 +173,21 @@ export default function HomePage() {
               {recentProjects.map((project, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-4 border border-border hover:border-gray-300 transition-colors cursor-pointer group">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-medium text-foreground text-sm group-hover:text-green-600 transition-colors">{project.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      project.status === "deployed" 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-gray-200 text-gray-700"
-                    }`}>
+                    <h3 
+                      className="font-medium text-foreground text-sm transition-colors"
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                    >
+                      {project.name}
+                    </h3>
+                    <span 
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        project.status === "deployed" 
+                          ? "text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      style={project.status === "deployed" ? { backgroundColor: '#341f4f' } : {}}
+                    >
                       {project.status}
                     </span>
                   </div>
@@ -200,5 +202,6 @@ export default function HomePage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }

@@ -41,7 +41,15 @@ export default function ProjectsPage() {
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-border rounded-lg focus:outline-none transition-colors text-sm"
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = '';
+                }}
               />
             </div>
           </div>
@@ -57,7 +65,11 @@ export default function ProjectsPage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground mb-2 group-hover:text-green-600 transition-colors">
+                      <h3 
+                        className="font-semibold text-foreground mb-2 transition-colors"
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#341f4f'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = ''}
+                      >
                         {project.name}
                       </h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -76,11 +88,14 @@ export default function ProjectsPage() {
                   </div>
                   
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      project.status === "deployed" 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-gray-200 text-gray-700"
-                    }`}>
+                    <span 
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        project.status === "deployed" 
+                          ? "text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      style={project.status === "deployed" ? { backgroundColor: '#341f4f' } : {}}
+                    >
                       {project.status}
                     </span>
                     <div className="flex items-center text-xs text-muted-foreground">

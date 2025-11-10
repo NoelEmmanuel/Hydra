@@ -1,95 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-import requests
-from core.system_manager import SystemManager
+from fastapi import FastAPI
+from core.api.systems import router as systems_router
 
 app = FastAPI()
-system_manager = SystemManager()
 
-
-class SystemConfig(BaseModel):
-    """System configuration model."""
-    mission: Optional[str] = ""
-    models: List[Dict[str, Any]]
-    knowledge_bases: List[Dict[str, Any]]
-    tools: List[Dict[str, Any]]
-
-
-class ChatRequest(BaseModel):
-    """Chat request model."""
-    query: str
-
-
-class SystemResponse(BaseModel):
-    """System creation response model."""
-    system_id: str
-    endpoint: str
-
+# Include routers
+app.include_router(systems_router)
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return {"message": "Hydra API", "version": "0.1.0"}
 
-
-@app.post("/api/systems/create", response_model=SystemResponse)
-async def create_system(config: SystemConfig):
-    """
-    Create a new multi-agent system from JSON configuration.
-    
-    Args:
-        config: System configuration with models, knowledge_bases, and tools
-    
-    Returns:
-        System ID and endpoint URL
-    """
-    try:
-        # Use model_dump() for Pydantic v2, fallback to dict() for v1
-        try:
-            config_dict = config.model_dump()
-        except AttributeError:
-            config_dict = config.dict()
-        system_id = system_manager.create_system(config_dict)
-        endpoint = f"/api/systems/{system_id}/chat"
-        
-        return SystemResponse(
-            system_id=system_id,
-            endpoint=endpoint
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create system: {str(e)}")
-
-
-@app.post("/api/systems/{system_id}/chat")
-async def chat_with_system(system_id: str, request: ChatRequest):
-    """
-    Query a multi-agent system.
-    
-    Args:
-        system_id: System ID
-        request: Chat request with query
-    
-    Returns:
-        Text response from the system
-    """
-    try:
-        result = system_manager.process_query(system_id, request.query)
-        return {"response": result}
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except requests.exceptions.ConnectionError as e:
-        raise HTTPException(
-            status_code=503, 
-            detail=f"Connection error: Unable to reach LLM endpoint. Please check if the endpoint server is running and accessible. Error: {str(e)}"
-        )
-    except requests.exceptions.Timeout as e:
-        raise HTTPException(
-            status_code=504,
-            detail=f"Timeout error: The LLM endpoint did not respond in time. Please check if the endpoint server is running. Error: {str(e)}"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
 
 
