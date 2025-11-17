@@ -1,0 +1,54 @@
+{
+  "mission": "To manage a multi-agent system to handle fraud detection",
+  "models": [
+    {
+      "id": 1,
+      "name": "Fraud Detection Model",
+      "knowledge_bases": [1, 2, 3],
+      "tools": [1]
+    },
+    {
+      "id": 2,
+      "name": "Messenger Model",
+      "knowledge_bases": [1, 2, 3],
+      "tools": [2]
+    }
+  ],
+  "knowledge_bases": [
+    {
+      "id": 1,
+      "name": "Fraud Detection Knowledge Base",
+      "url": "https://s3.amazonaws.com/fraud-detection-knowledge-base.csv",
+      "description": "A knowledge base to detect fraud"
+    },
+    {
+      "id": 2,
+      "name": "Messenger Knowledge Base",
+      "url": "https://s3.amazonaws.com/messenger-knowledge-base.csv",
+      "description": "A knowledge base to send alerts of fraud detection"
+    },
+    {
+      "id": 3,
+      "name": "Contact Knowledge Base",
+      "url": "https://s3.amazonaws.com/contact-knowledge-base.csv",
+      "description": "A knowledge base to store contact information"
+    }
+  ],
+  "tools": [
+    {
+      "id": 1,
+      "name": "Fraud Detection Tool",
+      "description": "A tool to detect fraud patterns",
+      "api_url": "https://api.example.com/fraud/detect",
+      "api_key": "your-api-key-here"
+    },
+    {
+      "id": 2,
+      "name": "Messenger Tool",
+      "description": "A tool to send alerts",
+      "api_url": "https://api.example.com/messenger/send",
+      "api_key": "your-api-key-here"
+    }
+  ]
+}
+

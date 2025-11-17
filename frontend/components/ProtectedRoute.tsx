@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
@@ -12,17 +12,29 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, checkAuth, isLoading: authLoading } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
-  const hasChecked = useRef(false);
+  const pathname = usePathname();
+  const hasChecked = useRef<string | null>(null);
 
   useEffect(() => {
-    // Skip if already authenticated or already checked
-    if (isAuthenticated || hasChecked.current) {
+    // Skip if already authenticated
+    if (isAuthenticated) {
       setIsChecking(false);
       return;
     }
 
+    // Skip if we've already checked this path
+    if (hasChecked.current === pathname) {
+      setIsChecking(false);
+      return;
+    }
+
+    // Skip if still loading initial auth state
+    if (authLoading) {
+      return;
+    }
+
     const verifyAuth = async () => {
-      hasChecked.current = true;
+      hasChecked.current = pathname;
       setIsChecking(true);
       const isValid = await checkAuth();
       setIsChecking(false);
@@ -33,7 +45,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     };
 
     verifyAuth();
-  }, [isAuthenticated, checkAuth, router]);
+  }, [pathname, isAuthenticated, authLoading, checkAuth, router]);
 
   // Show loading state while checking authentication
   if (authLoading || isChecking) {

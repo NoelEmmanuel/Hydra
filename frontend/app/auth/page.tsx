@@ -106,7 +106,7 @@ export default function AuthPage() {
                     type="text"
                     id="name"
                     name="name"
-                    className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-gray-400/60 focus:outline-none transition-colors"
                     onFocus={(e) => {
                       e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
                       e.currentTarget.style.borderColor = 'transparent';
@@ -128,7 +128,7 @@ export default function AuthPage() {
                   type="email"
                   id="email"
                   name="email"
-                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-gray-400/60 focus:outline-none transition-colors"
                   onFocus={(e) => {
                     e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
                     e.currentTarget.style.borderColor = 'transparent';
@@ -150,7 +150,7 @@ export default function AuthPage() {
                   type="password"
                   id="password"
                   name="password"
-                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border border-input rounded-2xl bg-background text-foreground placeholder:text-gray-400/60 focus:outline-none transition-colors"
                   onFocus={(e) => {
                     e.currentTarget.style.boxShadow = '0 0 0 2px #341f4f';
                     e.currentTarget.style.borderColor = 'transparent';
