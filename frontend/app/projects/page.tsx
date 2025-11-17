@@ -47,13 +47,14 @@ export default function ProjectsPage() {
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { getValidToken } = useAuth();
 
   useEffect(() => {
     fetchProjects();
-  }, [token]);
+  }, []);
 
   const fetchProjects = async () => {
+    const token = await getValidToken();
     if (!token) return;
     
     try {
@@ -65,6 +66,23 @@ export default function ProjectsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired, try refreshing
+          const refreshedToken = await getValidToken();
+          if (refreshedToken) {
+            // Retry with refreshed token
+            const retryResponse = await fetch(`${API_URL}/api/projects`, {
+              headers: {
+                Authorization: `Bearer ${refreshedToken}`,
+              },
+            });
+            if (retryResponse.ok) {
+              const data = await retryResponse.json();
+              setProjects(data);
+              return;
+            }
+          }
+        }
         throw new Error("Failed to fetch projects");
       }
 
@@ -78,6 +96,7 @@ export default function ProjectsPage() {
   };
 
   const handleCreateProject = async (name: string, description: string) => {
+    const token = await getValidToken();
     if (!token) throw new Error("Not authenticated");
 
     const response = await fetch(`${API_URL}/api/projects`, {
@@ -112,7 +131,13 @@ export default function ProjectsPage() {
   };
 
   const confirmDelete = async () => {
-    if (!token || !deleteModal.projectId) return;
+    if (!deleteModal.projectId) return;
+
+    const token = await getValidToken();
+    if (!token) {
+      setDeleteError("Authentication expired. Please refresh the page.");
+      return;
+    }
 
     setIsDeleting(true);
     setDeleteError(null);

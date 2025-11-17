@@ -13,7 +13,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6">
         <div className="text-center space-y-2">
           <h1 className="text-5xl md:text-6xl font-bold text-foreground tracking-tight">
-            Build Multi-Agent AI Systems
+            Build Multi-Agent Systems
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto py-2">
               Connect agents, tools, and data sources through a visual canvas.
